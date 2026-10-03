@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
-import { Montserrat} from "next/font/google";
+import { Montserrat } from "next/font/google";
+
 import "./globals.css";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import { CartProvider } from "./context/CartContext";
+import { AuthProvider } from "./context/AuthContext";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -25,17 +27,19 @@ export default function RootLayout({
       lang="pt-BR"
       className={`${montserrat.variable} h-full antialiased`}
     >
-     <body className="min-h-full flex flex-col">
-  <CartProvider>
-    <Header />
+      <body className="min-h-full flex flex-col">
+        <AuthProvider>
+          <CartProvider>
+            <Header />
 
-    <main className="flex-1">
-      {children}
-    </main>
+            <main className="flex-1">
+              {children}
+            </main>
 
-    <Footer />
-  </CartProvider>
-</body>
+            <Footer />
+          </CartProvider>
+        </AuthProvider>
+      </body>
     </html>
   );
 }

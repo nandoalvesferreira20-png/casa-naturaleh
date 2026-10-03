@@ -3,7 +3,20 @@ import { notFound } from "next/navigation";
 
 import ProductActions from "../../components/ProductActions";
 import ProductCard from "../../components/ProductCard";
-import { produtos } from "../../data/produtos";
+import { supabase } from "../../lib/supabase";
+
+type Produto = {
+  id: string;
+  nome: string;
+  slug: string;
+  categoria: string;
+  preco: number;
+  imagem: string;
+  descricao: string | null;
+  estoque: number;
+  ativo: boolean;
+  criado_em?: string;
+};
 
 type ProdutoPageProps = {
   params: Promise<{
@@ -16,68 +29,114 @@ export default async function ProdutoPage({
 }: ProdutoPageProps) {
   const { slug } = await params;
 
-  const produto = produtos.find(
-    (item) => item.slug === slug
-  );
+  const {
+    data: produto,
+    error,
+  } = await supabase
+    .from("products")
+    .select("*")
+    .eq("slug", slug)
+    .eq("ativo", true)
+    .maybeSingle();
+
+  if (error) {
+    console.error(
+      "Erro ao buscar produto:",
+      error
+    );
+
+    notFound();
+  }
 
   if (!produto) {
     notFound();
   }
 
-  const produtosRelacionados = produtos
-    .filter((item) => item.id !== produto.id)
-    .slice(0, 4);
+  const produtoAtual =
+    produto as Produto;
+
+  const {
+    data: relacionados,
+    error: erroRelacionados,
+  } = await supabase
+    .from("products")
+    .select("*")
+    .eq("ativo", true)
+    .neq(
+      "id",
+      produtoAtual.id
+    )
+    .order(
+      "criado_em",
+      {
+        ascending: false,
+      }
+    )
+    .limit(4);
+
+  if (erroRelacionados) {
+    console.error(
+      "Erro ao buscar produtos relacionados:",
+      erroRelacionados
+    );
+  }
+
+  const produtosRelacionados =
+    (relacionados ?? []) as Produto[];
 
   return (
     <main className="bg-[var(--color-bg)] text-[var(--color-text)]">
-
       <section className="py-16 md:py-20">
         <div className="mx-auto grid max-w-7xl gap-12 px-6 lg:grid-cols-2">
 
           {/* Imagem do produto */}
           <div className="relative flex h-[520px] items-center justify-center overflow-hidden rounded-[2rem] bg-[var(--color-bg-soft)]">
             <Image
-              src={produto.imagem}
-              alt={produto.nome}
+              src={produtoAtual.imagem}
+              alt={produtoAtual.nome}
               fill
               sizes="(min-width: 1280px) 592px, (min-width: 1024px) 50vw, 100vw"
               className="object-contain p-6"
+              priority
             />
           </div>
 
           {/* Informações do produto */}
           <div className="flex flex-col justify-center">
-
             <span className="text-sm font-medium uppercase tracking-[0.2em] text-[var(--color-primary)]">
-              {produto.categoria}
+              {produtoAtual.categoria}
             </span>
 
             <h1 className="mt-3 text-4xl font-semibold leading-tight md:text-5xl">
-              {produto.nome}
+              {produtoAtual.nome}
             </h1>
 
             <span className="mt-6 text-3xl font-semibold">
-              {produto.preco.toLocaleString("pt-BR", {
-                style: "currency",
-                currency: "BRL",
-              })}
+              {produtoAtual.preco.toLocaleString(
+                "pt-BR",
+                {
+                  style: "currency",
+                  currency: "BRL",
+                }
+              )}
             </span>
 
-            <p className="mt-6 max-w-xl leading-7 text-[var(--color-text-light)]">
-              {produto.descricao}
-            </p>
+            {produtoAtual.descricao && (
+              <p className="mt-6 max-w-xl leading-7 text-[var(--color-text-light)]">
+                {produtoAtual.descricao}
+              </p>
+            )}
 
             <ProductActions
-              id={produto.id}
-              nome={produto.nome}
-              preco={produto.preco}
-              slug={produto.slug}
-              imagem={produto.imagem}
+              id={produtoAtual.id}
+              nome={produtoAtual.nome}
+              preco={produtoAtual.preco}
+              slug={produtoAtual.slug}
+              imagem={produtoAtual.imagem}
             />
 
             {/* Benefícios */}
             <div className="mt-10 grid gap-4 border-t border-black/10 pt-8 sm:grid-cols-3">
-
               <div className="rounded-[1.25rem] bg-white p-4">
                 <h3 className="text-sm font-semibold">
                   Compra segura
@@ -107,7 +166,6 @@ export default async function ProdutoPage({
                   Frete calculado na finalização da compra.
                 </p>
               </div>
-
             </div>
 
             {/* Informações adicionais */}
@@ -122,7 +180,14 @@ export default async function ProdutoPage({
                 </li>
 
                 <li>
-                  • Consulte disponibilidade em estoque
+                  •{" "}
+                  {produtoAtual.estoque > 0
+                    ? `${produtoAtual.estoque} ${
+                        produtoAtual.estoque === 1
+                          ? "unidade disponível"
+                          : "unidades disponíveis"
+                      }`
+                    : "Produto indisponível no momento"}
                 </li>
 
                 <li>
@@ -130,45 +195,47 @@ export default async function ProdutoPage({
                 </li>
               </ul>
             </div>
-
           </div>
         </div>
       </section>
 
       {/* Produtos recomendados */}
-      <section className="border-t border-black/5 bg-white py-20">
-        <div className="mx-auto max-w-7xl px-6">
+      {produtosRelacionados.length > 0 && (
+        <section className="border-t border-black/5 bg-white py-20">
+          <div className="mx-auto max-w-7xl px-6">
+            <div className="mb-10">
+              <span className="text-sm font-medium uppercase tracking-[0.25em] text-[var(--color-primary)]">
+                Continue explorando
+              </span>
 
-          <div className="mb-10">
-            <span className="text-sm font-medium uppercase tracking-[0.25em] text-[var(--color-primary)]">
-              Continue explorando
-            </span>
+              <h2 className="mt-3 text-3xl font-semibold md:text-4xl">
+                Você também pode gostar
+              </h2>
 
-            <h2 className="mt-3 text-3xl font-semibold md:text-4xl">
-              Você também pode gostar
-            </h2>
+              <p className="mt-3 text-[var(--color-text-light)]">
+                Outros produtos selecionados para complementar sua rotina.
+              </p>
+            </div>
 
-            <p className="mt-3 text-[var(--color-text-light)]">
-              Outros produtos selecionados para complementar sua rotina.
-            </p>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {produtosRelacionados.map(
+                (item) => (
+                  <ProductCard
+                    key={item.id}
+                    nome={item.nome}
+                    categoria={
+                      item.categoria
+                    }
+                    preco={item.preco}
+                    slug={item.slug}
+                    imagem={item.imagem}
+                  />
+                )
+              )}
+            </div>
           </div>
-
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {produtosRelacionados.map((item) => (
-              <ProductCard
-                key={item.id}
-                nome={item.nome}
-                categoria={item.categoria}
-                preco={item.preco}
-                slug={item.slug}
-                imagem={item.imagem}
-              />
-            ))}
-          </div>
-
-        </div>
-      </section>
-
+        </section>
+      )}
     </main>
   );
 }

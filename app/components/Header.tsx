@@ -2,15 +2,22 @@
 
 import Image from "next/image";
 import Link from "next/link";
+
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 
 export default function Header() {
   const { totalItens } = useCart();
+  const { user } = useAuth();
+
+  const nomeUsuario =
+    user?.displayName ||
+    user?.email?.split("@")[0] ||
+    "Usuário";
 
   return (
     <header className="w-full border-b border-black/5 bg-[var(--color-bg)]">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-
         <Link href="/" className="flex items-center">
           <Image
             src="/images/brand/logo-casa-naturaleh.png"
@@ -60,12 +67,22 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-4">
-          <Link
-            href="/login"
-            className="rounded-full border border-black/10 px-4 py-2 text-sm font-medium transition hover:bg-black/5"
-          >
-            Entrar
-          </Link>
+          {user ? (
+            <Link
+              href="/minha-conta"
+              className="max-w-[180px] truncate rounded-full border border-black/10 px-4 py-2 text-sm font-medium transition hover:bg-black/5"
+              title={`Olá, ${nomeUsuario}`}
+            >
+              Olá, {nomeUsuario}
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="rounded-full border border-black/10 px-4 py-2 text-sm font-medium transition hover:bg-black/5"
+            >
+              Entrar
+            </Link>
+          )}
 
           <Link
             href="/carrinho"
@@ -81,7 +98,6 @@ export default function Header() {
             )}
           </Link>
         </div>
-
       </div>
     </header>
   );

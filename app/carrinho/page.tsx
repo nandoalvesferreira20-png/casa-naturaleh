@@ -1,11 +1,30 @@
 "use client";
 
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
 import Image from "next/image";
 import Link from "next/link";
 
 import ProductCard from "../components/ProductCard";
 import { useCart } from "../context/CartContext";
-import { produtos } from "../data/produtos";
+import { supabase } from "../lib/supabase";
+
+type Produto = {
+  id: string;
+  nome: string;
+  slug: string;
+  categoria: string;
+  preco: number;
+  imagem: string;
+  descricao: string | null;
+  estoque: number;
+  ativo: boolean;
+  criado_em?: string;
+};
 
 export default function CarrinhoPage() {
   const {
@@ -17,12 +36,75 @@ export default function CarrinhoPage() {
     totalItens,
   } = useCart();
 
-  const produtosRecomendados = produtos
-    .filter(
-      (produto) =>
-        !itens.some((item) => item.id === produto.id)
-    )
-    .slice(0, 4);
+  const [
+    produtos,
+    setProdutos,
+  ] = useState<Produto[]>([]);
+
+  const [
+    carregandoRecomendados,
+    setCarregandoRecomendados,
+  ] = useState(true);
+
+  useEffect(() => {
+    carregarProdutos();
+  }, []);
+
+  async function carregarProdutos() {
+    try {
+      setCarregandoRecomendados(
+        true
+      );
+
+      const {
+        data,
+        error,
+      } = await supabase
+        .from("products")
+        .select("*")
+        .eq("ativo", true)
+        .order(
+          "criado_em",
+          {
+            ascending: false,
+          }
+        );
+
+      if (error) {
+        throw error;
+      }
+
+      setProdutos(
+        (data ?? []) as Produto[]
+      );
+    } catch (error) {
+      console.error(
+        "Erro ao carregar produtos recomendados:",
+        error
+      );
+    } finally {
+      setCarregandoRecomendados(
+        false
+      );
+    }
+  }
+
+  const produtosRecomendados =
+    useMemo(() => {
+      return produtos
+        .filter(
+          (produto) =>
+            !itens.some(
+              (item) =>
+                item.id ===
+                produto.id
+            )
+        )
+        .slice(0, 4);
+    }, [
+      produtos,
+      itens,
+    ]);
 
   return (
     <main className="bg-[var(--color-bg)] text-[var(--color-text)]">
@@ -64,87 +146,117 @@ export default function CarrinhoPage() {
           ) : (
             <div className="grid gap-10 lg:grid-cols-[1fr_380px]">
               <div className="space-y-4">
-                {itens.map((item) => (
-                  <div
-                    key={item.id}
-                    className="grid gap-5 rounded-[1.5rem] border border-black/5 bg-white p-5 sm:grid-cols-[120px_1fr_auto] sm:items-center"
-                  >
-                    <div className="relative h-28 overflow-hidden rounded-2xl bg-[var(--color-bg-soft)]">
-                      <Image
-                        src={item.imagem}
-                        alt={item.nome}
-                        fill
-                        sizes="120px"
-                        className="object-contain p-3"
-                      />
-                    </div>
-
-                    <div>
-                      <h2 className="text-lg font-semibold">
-                        {item.nome}
-                      </h2>
-
-                      <p className="mt-1 text-sm text-[var(--color-text-light)]">
-                        {item.preco.toLocaleString("pt-BR", {
-                          style: "currency",
-                          currency: "BRL",
-                        })}{" "}
-                        cada
-                      </p>
-
-                      <p className="mt-2 text-sm font-medium">
-                        Subtotal:{" "}
-                        {(item.preco * item.quantidade).toLocaleString(
-                          "pt-BR",
-                          {
-                            style: "currency",
-                            currency: "BRL",
+                {itens.map(
+                  (item) => (
+                    <div
+                      key={
+                        item.id
+                      }
+                      className="grid gap-5 rounded-[1.5rem] border border-black/5 bg-white p-5 sm:grid-cols-[120px_1fr_auto] sm:items-center"
+                    >
+                      <div className="relative h-28 overflow-hidden rounded-2xl bg-[var(--color-bg-soft)]">
+                        <Image
+                          src={
+                            item.imagem
                           }
-                        )}
-                      </p>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-4">
-                      <div className="inline-flex items-center overflow-hidden rounded-full border border-black/10 bg-[var(--color-bg)]">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            diminuirQuantidade(item.id)
+                          alt={
+                            item.nome
                           }
-                          className="flex h-10 w-10 cursor-pointer items-center justify-center text-lg transition hover:bg-black/5"
-                          aria-label={`Diminuir quantidade de ${item.nome}`}
-                        >
-                          −
-                        </button>
-
-                        <span className="flex h-10 min-w-10 items-center justify-center border-x border-black/10 px-3 text-sm font-semibold">
-                          {item.quantidade}
-                        </span>
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            aumentarQuantidade(item.id)
-                          }
-                          className="flex h-10 w-10 cursor-pointer items-center justify-center text-lg transition hover:bg-black/5"
-                          aria-label={`Aumentar quantidade de ${item.nome}`}
-                        >
-                          +
-                        </button>
+                          fill
+                          sizes="120px"
+                          className="object-contain p-3"
+                        />
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() =>
-                          removerDoCarrinho(item.id)
-                        }
-                        className="cursor-pointer text-sm font-medium text-red-600 transition hover:opacity-70"
-                      >
-                        Remover
-                      </button>
+                      <div>
+                        <h2 className="text-lg font-semibold">
+                          {
+                            item.nome
+                          }
+                        </h2>
+
+                        <p className="mt-1 text-sm text-[var(--color-text-light)]">
+                          {item.preco.toLocaleString(
+                            "pt-BR",
+                            {
+                              style:
+                                "currency",
+
+                              currency:
+                                "BRL",
+                            }
+                          )}{" "}
+                          cada
+                        </p>
+
+                        <p className="mt-2 text-sm font-medium">
+                          Subtotal:{" "}
+                          {(
+                            item.preco *
+                            item.quantidade
+                          ).toLocaleString(
+                            "pt-BR",
+                            {
+                              style:
+                                "currency",
+
+                              currency:
+                                "BRL",
+                            }
+                          )}
+                        </p>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-4">
+                        <div className="inline-flex items-center overflow-hidden rounded-full border border-black/10 bg-[var(--color-bg)]">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              diminuirQuantidade(
+                                item.id
+                              )
+                            }
+                            className="flex h-10 w-10 cursor-pointer items-center justify-center text-lg transition hover:bg-black/5"
+                            aria-label={`Diminuir quantidade de ${item.nome}`}
+                          >
+                            −
+                          </button>
+
+                          <span className="flex h-10 min-w-10 items-center justify-center border-x border-black/10 px-3 text-sm font-semibold">
+                            {
+                              item.quantidade
+                            }
+                          </span>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              aumentarQuantidade(
+                                item.id
+                              )
+                            }
+                            className="flex h-10 w-10 cursor-pointer items-center justify-center text-lg transition hover:bg-black/5"
+                            aria-label={`Aumentar quantidade de ${item.nome}`}
+                          >
+                            +
+                          </button>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            removerDoCarrinho(
+                              item.id
+                            )
+                          }
+                          className="cursor-pointer text-sm font-medium text-red-600 transition hover:opacity-70"
+                        >
+                          Remover
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                )}
               </div>
 
               <aside className="h-fit rounded-[1.5rem] bg-white p-6 lg:sticky lg:top-6">
@@ -158,7 +270,9 @@ export default function CarrinhoPage() {
                   </span>
 
                   <span className="font-medium">
-                    {totalItens}
+                    {
+                      totalItens
+                    }
                   </span>
                 </div>
 
@@ -168,10 +282,16 @@ export default function CarrinhoPage() {
                   </span>
 
                   <span className="font-semibold">
-                    {subtotal.toLocaleString("pt-BR", {
-                      style: "currency",
-                      currency: "BRL",
-                    })}
+                    {subtotal.toLocaleString(
+                      "pt-BR",
+                      {
+                        style:
+                          "currency",
+
+                        currency:
+                          "BRL",
+                      }
+                    )}
                   </span>
                 </div>
 
@@ -196,34 +316,54 @@ export default function CarrinhoPage() {
             </div>
           )}
 
-          <section className="mt-20">
-            <div className="mb-8">
-              <span className="text-sm font-medium uppercase tracking-[0.25em] text-[var(--color-primary)]">
-                Complete sua compra
-              </span>
+          {!carregandoRecomendados &&
+            produtosRecomendados.length >
+              0 && (
+              <section className="mt-20">
+                <div className="mb-8">
+                  <span className="text-sm font-medium uppercase tracking-[0.25em] text-[var(--color-primary)]">
+                    Complete sua compra
+                  </span>
 
-              <h2 className="mt-3 text-3xl font-semibold md:text-4xl">
-                Você também pode gostar
-              </h2>
+                  <h2 className="mt-3 text-3xl font-semibold md:text-4xl">
+                    Você também pode gostar
+                  </h2>
 
-              <p className="mt-2 text-[var(--color-text-light)]">
-                Alguns produtos que combinam com sua seleção.
-              </p>
-            </div>
+                  <p className="mt-2 text-[var(--color-text-light)]">
+                    Alguns produtos que combinam com sua seleção.
+                  </p>
+                </div>
 
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {produtosRecomendados.map((produto) => (
-                <ProductCard
-                  key={produto.id}
-                  nome={produto.nome}
-                  categoria={produto.categoria}
-                  preco={produto.preco}
-                  slug={produto.slug}
-                  imagem={produto.imagem}
-                />
-              ))}
-            </div>
-          </section>
+                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                  {produtosRecomendados.map(
+                    (
+                      produto
+                    ) => (
+                      <ProductCard
+                        key={
+                          produto.id
+                        }
+                        nome={
+                          produto.nome
+                        }
+                        categoria={
+                          produto.categoria
+                        }
+                        preco={
+                          produto.preco
+                        }
+                        slug={
+                          produto.slug
+                        }
+                        imagem={
+                          produto.imagem
+                        }
+                      />
+                    )
+                  )}
+                </div>
+              </section>
+            )}
         </div>
       </section>
     </main>

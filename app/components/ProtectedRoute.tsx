@@ -3,6 +3,8 @@
 import { ReactNode, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
+import { useAuth } from "../context/AuthContext";
+
 type ProtectedRouteProps = {
   children: ReactNode;
 };
@@ -10,17 +12,26 @@ type ProtectedRouteProps = {
 export default function ProtectedRoute({
   children,
 }: ProtectedRouteProps) {
+  const { user, loading } = useAuth();
   const router = useRouter();
 
-  const usuarioLogado = false;
-
   useEffect(() => {
-    if (!usuarioLogado) {
+    if (!loading && !user) {
       router.replace("/login");
     }
-  }, [usuarioLogado, router]);
+  }, [user, loading, router]);
 
-  if (!usuarioLogado) {
+  if (loading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <p className="text-sm text-[var(--color-text-light)]">
+          Carregando...
+        </p>
+      </div>
+    );
+  }
+
+  if (!user) {
     return null;
   }
 
