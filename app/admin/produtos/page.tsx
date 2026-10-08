@@ -3,8 +3,11 @@
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
+
+import { LIMITE_CSV, LIMITE_LOTE, type LinhaImportacao, type ResultadoImportacao } from "../../lib/importacao-produtos";
 
 import AdminRoute from "../../components/AdminRoute";
 import { useAuth } from "../../context/AuthContext";
@@ -44,11 +47,167 @@ const formularioInicial: FormProduto = {
   ativo: true,
 };
 
+function ImportacaoProdutosModal({ obterToken, onConcluir, onFechar }: {
+  obterToken: () => Promise<string>;
+  onConcluir: () => void;
+  onFechar: () => void;
+}) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const requisicao = useRef<AbortController | null>(null);
+  const bloqueado = useRef(false);
+  const [csv, setCsv] = useState<File | null>(null);
+  const [imagens, setImagens] = useState<File[]>([]);
+  const [linhas, setLinhas] = useState<LinhaImportacao[]>([]);
+  const [validando, setValidando] = useState(false);
+  const [importando, setImportando] = useState(false);
+  const [erro, setErro] = useState("");
+  const [resultado, setResultado] = useState<ResultadoImportacao | null>(null);
+  const validas = linhas.filter(linha => !linha.erros.length).length;
+
+  useEffect(() => {
+    const elemento = dialog.current;
+    elemento?.showModal();
+    return () => { requisicao.current?.abort(); elemento?.close(); };
+  }, []);
+
+  async function validar(arquivo: File | null, selecionadas: File[]) {
+    requisicao.current?.abort();
+    const controller = new AbortController();
+    requisicao.current = controller;
+    setCsv(arquivo);
+    setImagens(selecionadas);
+    setLinhas([]);
+    setErro("");
+    setValidando(false);
+    if (!arquivo) return;
+    if (!arquivo.name.toLowerCase().endsWith(".csv") || arquivo.size > LIMITE_CSV) {
+      setErro("Selecione um arquivo .csv de até 1 MB.");
+      return;
+    }
+    if (selecionadas.length > 200 || selecionadas.reduce((total, imagem) => total + imagem.size, 0) > LIMITE_LOTE) {
+      setErro("Selecione até 200 imagens, totalizando no máximo 50 MB por lote.");
+      return;
+    }
+    setValidando(true);
+    try {
+      const token = await obterToken();
+      if (controller.signal.aborted) return;
+      const form = new FormData();
+      form.append("acao", "validar");
+      form.append("csv", arquivo);
+      form.append("manifesto", JSON.stringify(selecionadas.map(({ name, size, type }) => ({ name, size, type }))));
+      const response = await fetch("/api/admin/produtos/importar", {
+        method: "POST", headers: { Authorization: `Bearer ${token}` }, body: form, signal: controller.signal,
+      });
+      if (!response.headers.get("content-type")?.includes("application/json")) throw new Error("O servidor não retornou a validação. Tente novamente.");
+      const dados = await response.json();
+      if (!response.ok) throw new Error(dados.error || "Não foi possível validar o CSV.");
+      if (!controller.signal.aborted) setLinhas(dados.linhas);
+    } catch (error) {
+      if (!controller.signal.aborted) setErro(error instanceof Error ? error.message : "Erro na validação.");
+    } finally {
+      if (!controller.signal.aborted) setValidando(false);
+    }
+  }
+
+  async function importar() {
+    if (!csv || !validas || validando || bloqueado.current) return;
+    bloqueado.current = true;
+    setImportando(true);
+    setErro("");
+    try {
+      const token = await obterToken();
+      const form = new FormData();
+      form.append("acao", "importar");
+      form.append("csv", csv);
+      // Enviar os arquivos originais para que o backend revalide todas as linhas.
+      imagens.forEach(imagem => form.append("imagens", imagem));
+      const response = await fetch("/api/admin/produtos/importar", {
+        method: "POST", headers: { Authorization: `Bearer ${token}` }, body: form,
+      });
+      if (!response.headers.get("content-type")?.includes("application/json")) throw new Error("Não foi possível confirmar a importação. Confira a listagem e valide novamente antes de repetir.");
+      const dados = await response.json();
+      if (!response.ok) throw new Error(dados.error || "Não foi possível importar. Confira a listagem antes de repetir.");
+      setResultado(dados);
+    } catch (error) {
+      setLinhas([]);
+      setErro(`${error instanceof Error ? error.message : "Erro na importação."} Valide o CSV novamente antes de tentar importar.`);
+    } finally {
+      bloqueado.current = false;
+      setImportando(false);
+    }
+  }
+
+  const botao = "cursor-pointer rounded-full border border-[var(--color-bg-soft)] px-6 py-3.5 text-sm font-semibold transition hover:bg-[var(--color-bg-soft)] disabled:cursor-not-allowed disabled:opacity-50";
+  return (
+    <dialog ref={dialog} aria-labelledby="titulo-importacao" aria-describedby="descricao-importacao"
+      onCancel={event => { event.preventDefault(); if (!bloqueado.current) (resultado ? onConcluir : onFechar)(); }}
+      className="fixed inset-0 m-auto max-h-[90vh] w-[calc(100%-3rem)] max-w-5xl overflow-y-auto rounded-[2rem] bg-[var(--color-white)] p-7 text-[var(--color-text)] shadow-xl backdrop:bg-[var(--color-black)]/40 md:p-8">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 id="titulo-importacao" className="text-2xl font-semibold">Importar produtos em lote</h2>
+          <p id="descricao-importacao" className="mt-3 text-sm text-[var(--color-text-light)]">Cadastre vários produtos de uma vez utilizando um arquivo CSV e suas respectivas imagens.</p>
+        </div>
+        <button type="button" aria-label="Fechar importação" disabled={importando} onClick={resultado ? onConcluir : onFechar} className={botao}>×</button>
+      </div>
+      {resultado ? (
+        <div className="mt-7 space-y-5" role="status">
+          <h3 className="text-xl font-semibold">Importação concluída{resultado.erros || resultado.avisos.length ? " com pendências" : ""}</h3>
+          <p>Produtos importados: {resultado.importados} · Ignorados: {resultado.ignorados} · Erros: {resultado.erros}</p>
+          {resultado.avisos.map((aviso, i) => <p key={i} className="rounded-2xl bg-[var(--color-bg-soft)] p-4">{aviso}</p>)}
+          {resultado.detalhes.length > 0 && <ul className="space-y-2 text-sm">{resultado.detalhes.map((item, i) => <li key={i}>Linha {item.linha} — {item.mensagem}</li>)}</ul>}
+          <button type="button" onClick={onConcluir} className={botao}>Concluir</button>
+        </div>
+      ) : (
+        <div className="mt-7 space-y-5" aria-busy={importando || validando}>
+          <a href="/modelos/importacao-produtos.csv" download className="inline-block text-sm font-semibold text-[var(--color-primary)] underline">Baixar modelo CSV</a>
+          <p className="text-xs text-[var(--color-text-light)]">Até 200 produtos por lote. CSV de até 1 MB, separado por vírgulas e com preço em ponto decimal. Imagens de até 5 MB cada e 50 MB no total. O nome da imagem deve corresponder exatamente ao arquivo selecionado.</p>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <label className="text-sm font-medium">Selecionar CSV
+              <input type="file" accept=".csv" disabled={importando} onChange={event => void validar(event.target.files?.[0] ?? null, imagens)} className="mt-2 block w-full rounded-2xl border border-[var(--color-bg-soft)] bg-[var(--color-bg)] p-4" />
+            </label>
+            <label className="text-sm font-medium">Selecionar imagens
+              <input type="file" multiple accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" disabled={importando} onChange={event => void validar(csv, Array.from(event.target.files ?? []))} className="mt-2 block w-full rounded-2xl border border-[var(--color-bg-soft)] bg-[var(--color-bg)] p-4" />
+            </label>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {[["Produtos encontrados", linhas.length], ["Produtos válidos", validas], ["Com erro", linhas.length - validas], ["Imagens selecionadas", imagens.length]].map(([rotulo, valor]) => (
+              <div key={rotulo} className="rounded-2xl bg-[var(--color-bg)] p-4"><p className="text-xs text-[var(--color-text-light)]">{rotulo}</p><p className="mt-2 text-2xl font-semibold">{valor}</p></div>
+            ))}
+          </div>
+          {validando && <p role="status">Validando CSV e verificando slugs no banco...</p>}
+          {erro && <p role="alert" className="rounded-2xl bg-[var(--color-bg-soft)] p-4 text-sm">{erro}</p>}
+          {linhas.length > 0 && <div className="max-h-80 overflow-auto rounded-2xl border border-[var(--color-bg-soft)]">
+            <table className="w-full text-left text-sm">
+              <thead className="sticky top-0 bg-[var(--color-bg)]"><tr>{["Linha", "Produto", "Categoria", "Preço", "Estoque", "Imagem", "Status da validação"].map(titulo => <th key={titulo} scope="col" className="px-4 py-3 font-semibold">{titulo}</th>)}</tr></thead>
+              <tbody>{linhas.map(({ linha, produto, erros }) => <tr key={linha} className={erros.length ? "border-t border-[var(--color-bg-soft)] bg-[var(--color-bg-soft)]/40" : "border-t border-[var(--color-bg-soft)]"}>
+                <td className="px-4 py-3">{linha}</td><td className="px-4 py-3">{produto.nome}</td><td className="px-4 py-3">{produto.categoria}</td>
+                <td className="whitespace-nowrap px-4 py-3">{produto.preco && Number.isFinite(Number(produto.preco)) ? Number(produto.preco).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : produto.preco || "—"}</td>
+                <td className="px-4 py-3">{produto.estoque || "—"}</td><td className="break-all px-4 py-3">{produto.imagem}</td>
+                <td className="min-w-48 px-4 py-3">{erros.length ? erros.join("; ") : "✓ Válido"}</td>
+              </tr>)}</tbody>
+            </table>
+          </div>}
+          <p className="text-sm text-[var(--color-text-light)]">Somente as linhas válidas serão importadas. Linhas com erro serão ignoradas. Os dados serão verificados novamente na confirmação.</p>
+          {importando && <p role="status">Enviando imagens e cadastrando produtos. Aguarde e mantenha esta janela aberta.</p>}
+          <div className="flex flex-wrap gap-3">
+            <button type="button" disabled={!validas || validando || importando} onClick={() => void importar()} className="cursor-pointer rounded-full bg-[var(--color-primary)] px-6 py-3.5 text-sm font-semibold text-[var(--color-white)] transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50">{importando ? "Importando..." : `Importar ${validas} produtos`}</button>
+            <button type="button" disabled={!csv || validando || importando} onClick={() => void validar(csv, imagens)} className={botao}>Validar novamente</button>
+            <button type="button" disabled={importando} onClick={onFechar} className={botao}>Cancelar</button>
+          </div>
+        </div>
+      )}
+    </dialog>
+  );
+}
+
 export default function AdminProdutosPage() {
   const {
     user,
     loading: authLoading,
   } = useAuth();
+
+  const [importacaoAberta, setImportacaoAberta] = useState(false);
 
   const [produtos, setProdutos] =
     useState<Produto[]>([]);
@@ -1026,6 +1185,7 @@ export default function AdminProdutosPage() {
               </p>
             </div>
 
+            <div className="flex flex-wrap gap-3">
             <button
               type="button"
               onClick={
@@ -1035,6 +1195,14 @@ export default function AdminProdutosPage() {
             >
               + Novo produto
             </button>
+              <button
+                type="button"
+                onClick={() => setImportacaoAberta(true)}
+                className="cursor-pointer rounded-full border border-[var(--color-bg-soft)] px-6 py-3.5 text-sm font-semibold transition hover:bg-[var(--color-bg-soft)]"
+              >
+                Importar em lote
+              </button>
+            </div>
           </div>
         </section>
 
@@ -1355,6 +1523,17 @@ export default function AdminProdutosPage() {
           </div>
         </section>
       </main>
+
+      {importacaoAberta && (
+        <ImportacaoProdutosModal
+          obterToken={obterToken}
+          onConcluir={() => {
+            setImportacaoAberta(false);
+            void carregarProdutos();
+          }}
+          onFechar={() => setImportacaoAberta(false)}
+        />
+      )}
 
       {modalAberto && (
         <div

@@ -12,6 +12,7 @@ type ProductActionsProps = {
   preco: number;
   slug: string;
   imagem: string;
+  estoque: number;
 };
 
 export default function ProductActions({
@@ -20,23 +21,31 @@ export default function ProductActions({
   preco,
   slug,
   imagem,
+  estoque,
 }: ProductActionsProps) {
-  const { adicionarAoCarrinho } = useCart();
+  const { adicionarAoCarrinho, itens } = useCart();
 
   const [quantidade, setQuantidade] = useState(1);
   const [modalAberto, setModalAberto] = useState(false);
+  const [quantidadeAdicionada, setQuantidadeAdicionada] = useState(0);
+  const estoqueDisponivel = Number.isSafeInteger(estoque) && estoque > 0 ? estoque : 0;
+  const quantidadeSelecionada = Math.min(quantidade, estoqueDisponivel);
+  const noCarrinho = itens.find(item => item.id === id)?.quantidade ?? 0;
+  const limiteAtingido = noCarrinho >= estoqueDisponivel;
 
   function diminuirQuantidade() {
     setQuantidade((valorAtual) =>
-      valorAtual > 1 ? valorAtual - 1 : 1
+      Math.max(1, Math.min(valorAtual, estoqueDisponivel) - 1)
     );
   }
 
   function aumentarQuantidade() {
-    setQuantidade((valorAtual) => valorAtual + 1);
+    setQuantidade((valorAtual) => Math.min(valorAtual + 1, estoqueDisponivel));
   }
 
   function handleAdicionarAoCarrinho() {
+    if (!estoqueDisponivel || limiteAtingido) return;
+    const adicionada = Math.min(quantidadeSelecionada, estoqueDisponivel - noCarrinho);
     adicionarAoCarrinho(
       {
         id,
@@ -44,10 +53,12 @@ export default function ProductActions({
         preco,
         slug,
         imagem,
+        estoque: estoqueDisponivel,
       },
-      quantidade
+      quantidadeSelecionada
     );
 
+    setQuantidadeAdicionada(adicionada);
     setModalAberto(true);
   }
 
@@ -58,7 +69,10 @@ export default function ProductActions({
   return (
     <>
       <div className="mt-8">
-        <div>
+        <p className="mb-3 text-sm text-[var(--color-text-light)]" role="status">
+          {estoqueDisponivel > 0 ? `Em estoque: ${estoqueDisponivel} unidades` : "Produto indisponível no momento"}
+        </p>
+        {estoqueDisponivel > 0 && <div>
           <span className="text-sm font-medium">
             Quantidade
           </span>
@@ -67,33 +81,42 @@ export default function ProductActions({
             <button
               type="button"
               onClick={diminuirQuantidade}
-              className="flex h-11 w-11 cursor-pointer items-center justify-center text-lg transition hover:bg-black/5"
+              disabled={quantidadeSelecionada <= 1}
+              className="flex h-11 w-11 cursor-pointer items-center justify-center text-lg transition hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-50"
               aria-label={`Diminuir quantidade de ${nome}`}
             >
               −
             </button>
 
             <span className="flex h-11 min-w-12 items-center justify-center border-x border-black/10 px-4 text-sm font-semibold">
-              {quantidade}
+              {quantidadeSelecionada}
             </span>
 
             <button
               type="button"
               onClick={aumentarQuantidade}
-              className="flex h-11 w-11 cursor-pointer items-center justify-center text-lg transition hover:bg-black/5"
+              disabled={quantidadeSelecionada >= estoqueDisponivel}
+              className="flex h-11 w-11 cursor-pointer items-center justify-center text-lg transition hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-50"
               aria-label={`Aumentar quantidade de ${nome}`}
             >
               +
             </button>
           </div>
-        </div>
+        </div>}
+
+        {estoqueDisponivel > 0 && (limiteAtingido || quantidadeSelecionada + noCarrinho > estoqueDisponivel) && (
+          <p className="mt-3 text-sm text-[var(--color-text-light)]" role="status">
+            {limiteAtingido ? "Limite disponível atingido no carrinho." : `Você já tem ${noCarrinho} no carrinho. Serão adicionadas apenas ${estoqueDisponivel - noCarrinho} unidades para respeitar o estoque.`}
+          </p>
+        )}
 
         <button
           type="button"
           onClick={handleAdicionarAoCarrinho}
-          className="mt-6 w-full cursor-pointer rounded-full bg-[var(--color-primary)] px-6 py-4 text-sm font-semibold text-white transition hover:opacity-90 sm:w-auto"
+          disabled={!estoqueDisponivel || limiteAtingido}
+          className="mt-6 w-full cursor-pointer rounded-full bg-[var(--color-primary)] px-6 py-4 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
         >
-          Adicionar ao carrinho
+          {estoqueDisponivel > 0 ? "Adicionar ao carrinho" : "Produto indisponível"}
         </button>
       </div>
 
@@ -146,12 +169,12 @@ export default function ProductActions({
                 </p>
 
                 <p className="mt-1 text-sm text-[var(--color-text-light)]">
-                  Quantidade: {quantidade}
+                  Quantidade: {quantidadeAdicionada}
                 </p>
 
                 <p className="mt-2 font-semibold">
                   {(
-                    preco * quantidade
+                    preco * quantidadeAdicionada
                   ).toLocaleString(
                     "pt-BR",
                     {

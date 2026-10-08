@@ -3,6 +3,7 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useState,
   ReactNode,
 } from "react";
@@ -14,7 +15,39 @@ export type CartItem = {
   slug: string;
   imagem: string;
   quantidade: number;
+  estoque: number;
 };
+
+const CHAVE_CARRINHO = "casa-naturaleh-cart";
+
+function itemValido(valor: unknown): valor is CartItem {
+  if (!valor || typeof valor !== "object") return false;
+  const item = valor as Record<string, unknown>;
+  return (
+    typeof item.id === "string" &&
+    typeof item.nome === "string" &&
+    typeof item.preco === "number" && Number.isFinite(item.preco) &&
+    typeof item.slug === "string" &&
+    typeof item.imagem === "string" &&
+    typeof item.quantidade === "number" &&
+    Number.isSafeInteger(item.quantidade) && item.quantidade > 0 &&
+    typeof item.estoque === "number" &&
+    Number.isSafeInteger(item.estoque) && item.estoque > 0
+  );
+}
+
+// Copiar somente os campos do carrinho, sem persistir propriedades adicionais.
+function dadosDoItem({ id, nome, preco, slug, imagem, quantidade, estoque }: CartItem): CartItem {
+  return { id, nome, preco, slug, imagem, quantidade: Math.min(quantidade, estoque), estoque };
+}
+
+function limparCarrinhoSalvo() {
+  try {
+    window.localStorage.removeItem(CHAVE_CARRINHO);
+  } catch {
+    // Storage bloqueado/indisponível não deve impedir o uso do carrinho em memória.
+  }
+}
 
 type CartContextType = {
   itens: CartItem[];
@@ -57,6 +90,45 @@ export function CartProvider({
     setItens,
   ] = useState<CartItem[]>([]);
 
+  const [carrinhoCarregado, setCarrinhoCarregado] = useState(false);
+
+  useEffect(() => {
+    function restaurarCarrinho() {
+      try {
+        const salvo = window.localStorage.getItem(CHAVE_CARRINHO);
+        if (salvo !== null) {
+          const dados: unknown = JSON.parse(salvo);
+          if (!Array.isArray(dados)) {
+            limparCarrinhoSalvo();
+          } else {
+            setItens(dados.filter(itemValido).map(dadosDoItem));
+          }
+        }
+      } catch {
+        limparCarrinhoSalvo();
+      } finally {
+        setCarrinhoCarregado(true);
+      }
+    }
+
+    // Restauração única de armazenamento externo após a montagem, mantendo SSR vazio.
+    restaurarCarrinho();
+  }, []);
+
+  useEffect(() => {
+    // Nunca sobrescrever o valor salvo com o estado vazio da primeira renderização.
+    if (!carrinhoCarregado) return;
+    if (itens.length === 0) {
+      limparCarrinhoSalvo();
+      return;
+    }
+    try {
+      window.localStorage.setItem(CHAVE_CARRINHO, JSON.stringify(itens.map(dadosDoItem)));
+    } catch {
+      // Falta de espaço ou bloqueio do navegador: preservar o funcionamento em memória.
+    }
+  }, [itens, carrinhoCarregado]);
+
   function adicionarAoCarrinho(
     item: Omit<
       CartItem,
@@ -64,6 +136,9 @@ export function CartProvider({
     >,
     quantidade = 1
   ) {
+    if (!Number.isSafeInteger(item.estoque) || item.estoque <= 0 ||
+        !Number.isSafeInteger(quantidade) || quantidade <= 0) return;
+
     setItens(
       (itensAtuais) => {
         const itemExiste =
@@ -80,10 +155,9 @@ export function CartProvider({
               item.id
                 ? {
                     ...produto,
-
+                    estoque: item.estoque,
                     quantidade:
-                      produto.quantidade +
-                      quantidade,
+                      Math.min(produto.quantidade + quantidade, item.estoque),
                   }
                 : produto
           );
@@ -94,7 +168,7 @@ export function CartProvider({
 
           {
             ...item,
-            quantidade,
+            quantidade: Math.min(quantidade, item.estoque),
           },
         ];
       }
@@ -120,7 +194,7 @@ export function CartProvider({
       (itensAtuais) =>
         itensAtuais.map(
           (produto) =>
-            produto.id === id
+            produto.id === id && produto.quantidade < produto.estoque
               ? {
                   ...produto,
 
@@ -161,6 +235,7 @@ export function CartProvider({
 
   function limparCarrinho() {
     setItens([]);
+    limparCarrinhoSalvo();
   }
 
   const totalItens =

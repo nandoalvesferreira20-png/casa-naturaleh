@@ -1,17 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 
 import {
-  addDoc,
-  collection,
   doc,
   getDoc,
-  serverTimestamp,
 } from "firebase/firestore";
 
 import { useCart } from "../context/CartContext";
@@ -67,8 +64,10 @@ export default function CheckoutPage() {
 
   // Finalização
   const [finalizando, setFinalizando] = useState(false);
+  const finalizacaoEmCurso = useRef(false);
   const [erroFinalizacao, setErroFinalizacao] = useState("");
 
+  // Valores de exibição; o pedido é recalculado exclusivamente pela API.
   const frete = 0;
   const total = subtotal + frete;
 
@@ -266,6 +265,7 @@ export default function CheckoutPage() {
   }
 
   async function handleFinalizarPedido() {
+    if (finalizacaoEmCurso.current) return;
     setErroFinalizacao("");
 
     if (!user) {
@@ -365,11 +365,11 @@ export default function CheckoutPage() {
     }
 
     try {
+      finalizacaoEmCurso.current = true;
       setFinalizando(true);
+      const token = await user.getIdToken();
 
       const pedido = {
-        userId: user.uid,
-
         cliente: {
           nome: nome.trim(),
           email: email.trim(),
@@ -388,39 +388,28 @@ export default function CheckoutPage() {
             estado.trim().toUpperCase(),
         },
 
-        itens: itens.map((item) => ({
-          id: item.id,
-          nome: item.nome,
-          preco: item.preco,
-          quantidade: item.quantidade,
-          imagem: item.imagem,
-          slug: item.slug,
-        })),
-
-        subtotal,
-        frete,
-        total,
-
+        itens: itens.map(({ id, quantidade }) => ({ id, quantidade })),
         pagamento,
-
-        status:
-          "aguardando_pagamento",
-
-        criadoEm:
-          serverTimestamp(),
       };
 
-      const referencia =
-        await addDoc(
-          collection(db, "orders"),
-          pedido
-        );
-
-        limparCarrinho();
-
-      router.push(
-        `/pedido-confirmado?id=${referencia.id}`
-      );
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(pedido),
+      });
+      if (!response.headers.get("content-type")?.includes("application/json")) {
+        throw new Error("Não foi possível confirmar o pedido. Confira Meus pedidos antes de tentar novamente.");
+      }
+      const dados = await response.json();
+      if (!response.ok) throw new Error(dados.error || "Não foi possível finalizar o pedido.");
+      if (dados.success !== true || typeof dados.orderId !== "string" || !dados.orderId) {
+        throw new Error("O servidor não confirmou a criação do pedido.");
+      }
+      limparCarrinho();
+      router.push(`/pedido-confirmado?id=${encodeURIComponent(dados.orderId)}`);
     } catch (error) {
       console.error(
         "Erro ao finalizar pedido:",
@@ -428,9 +417,10 @@ export default function CheckoutPage() {
       );
 
       setErroFinalizacao(
-        "Não foi possível finalizar o pedido."
+        error instanceof Error ? error.message : "Não foi possível finalizar o pedido."
       );
     } finally {
+      finalizacaoEmCurso.current = false;
       setFinalizando(false);
     }
   }

@@ -16,16 +16,18 @@ import {
 import ProtectedRoute from "../components/ProtectedRoute";
 import { useAuth } from "../context/AuthContext";
 import { db } from "../lib/firebase";
+import { paymentLabels, type PaymentRecord } from "../lib/payments/types";
 
 type Pedido = {
   id: string;
   userId: string;
   total: number;
   status: string;
+  payment?: PaymentRecord;
   criadoEm?: Timestamp;
 
   itens: {
-    id: number;
+    id: string;
     nome: string;
     preco: number;
     quantidade: number;
@@ -311,6 +313,7 @@ export default function MeusPedidosPage() {
                                   pedido.criadoEm
                                 )}
                               </p>
+                              {pedido.payment && <p className="mt-2 text-sm text-[var(--color-text-light)]">Pagamento: {paymentLabels[pedido.payment.status] ?? nomeStatus(pedido.status)}</p>}
                             </div>
 
                             <div className="flex flex-wrap items-center gap-8">

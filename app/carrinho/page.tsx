@@ -174,6 +174,10 @@ export default function CarrinhoPage() {
                             item.nome
                           }
                         </h2>
+                        <p className="mt-1 text-xs text-[var(--color-text-light)]" role="status">
+                          {item.estoque} disponíveis em estoque
+                          {item.quantidade >= item.estoque && " · Limite disponível atingido"}
+                        </p>
 
                         <p className="mt-1 text-sm text-[var(--color-text-light)]">
                           {item.preco.toLocaleString(
@@ -235,7 +239,8 @@ export default function CarrinhoPage() {
                                 item.id
                               )
                             }
-                            className="flex h-10 w-10 cursor-pointer items-center justify-center text-lg transition hover:bg-black/5"
+                            className="flex h-10 w-10 cursor-pointer items-center justify-center text-lg transition hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-50"
+                            disabled={item.quantidade >= item.estoque}
                             aria-label={`Aumentar quantidade de ${item.nome}`}
                           >
                             +
@@ -358,6 +363,7 @@ export default function CarrinhoPage() {
                         imagem={
                           produto.imagem
                         }
+                        estoque={produto.estoque}
                       />
                     )
                   )}

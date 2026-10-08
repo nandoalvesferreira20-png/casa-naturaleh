@@ -6,6 +6,7 @@ type ProductCardProps = {
   preco: number;
   slug: string;
   imagem: string;
+  estoque: number;
 };
 
 export default function ProductCard({
@@ -14,6 +15,7 @@ export default function ProductCard({
   preco,
   slug,
   imagem,
+  estoque,
 }: ProductCardProps) {
   const precoFormatado = preco.toLocaleString("pt-BR", {
     style: "currency",
@@ -30,6 +32,11 @@ export default function ProductCard({
           sizes="(min-width: 1280px) 290px, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
           className="object-contain p-5"
         />
+        {estoque <= 0 && (
+          <span className="absolute left-3 top-3 rounded-full bg-[var(--color-bg)] px-3 py-1 text-xs font-medium text-[var(--color-text)]">
+            Sem estoque
+          </span>
+        )}
       </div>
 
       <div className="p-5">

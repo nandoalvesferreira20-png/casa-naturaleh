@@ -12,6 +12,8 @@ import {
 import { db } from "../lib/firebase";
 import { useAuth } from "../context/AuthContext";
 import ProtectedRoute from "../components/ProtectedRoute";
+import PaymentPanel from "../components/payments/PaymentPanel";
+import type { PaymentRecord } from "../lib/payments/types";
 
 type Pedido = {
   userId: string;
@@ -33,7 +35,7 @@ type Pedido = {
   };
 
   itens: {
-    id: number;
+    id: string;
     nome: string;
     preco: number;
     quantidade: number;
@@ -47,6 +49,7 @@ type Pedido = {
 
   pagamento: string;
   status: string;
+  payment?: PaymentRecord;
 };
 
 export default function PedidoConfirmadoPage() {
@@ -179,7 +182,7 @@ export default function PedidoConfirmadoPage() {
                   </span>
 
                   <h1 className="mt-3 text-4xl font-semibold md:text-5xl">
-                    Compra realizada com sucesso
+                    Pedido criado
                   </h1>
 
                   <p className="mx-auto mt-4 max-w-xl leading-7 text-[var(--color-text-light)]">
@@ -310,7 +313,7 @@ export default function PedidoConfirmadoPage() {
                     </h2>
 
                     <p className="mt-2 text-sm text-[var(--color-text-light)]">
-                      Status: aguardando pagamento
+                      {pedido.payment ? "Acompanhe a confirmação na seção de pagamento abaixo." : `Status: ${pedido.status.replaceAll("_", " ")}`}
                     </p>
                   </div>
 
@@ -355,6 +358,8 @@ export default function PedidoConfirmadoPage() {
                     </p>
                   </div>
                 </section>
+
+                {pedido.payment && pedidoId && <PaymentPanel orderId={pedidoId} />}
 
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <Link

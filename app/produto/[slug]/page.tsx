@@ -133,6 +133,7 @@ export default async function ProdutoPage({
               preco={produtoAtual.preco}
               slug={produtoAtual.slug}
               imagem={produtoAtual.imagem}
+              estoque={produtoAtual.estoque}
             />
 
             {/* Benefícios */}
@@ -229,6 +230,7 @@ export default async function ProdutoPage({
                     preco={item.preco}
                     slug={item.slug}
                     imagem={item.imagem}
+                    estoque={item.estoque}
                   />
                 )
               )}

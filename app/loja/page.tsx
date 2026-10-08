@@ -427,6 +427,7 @@ export default function LojaPage() {
                     imagem={
                       produto.imagem
                     }
+                    estoque={produto.estoque}
                   />
                 )
               )}
