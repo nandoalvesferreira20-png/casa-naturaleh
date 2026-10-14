@@ -46,48 +46,37 @@ export default function LojaPage() {
   ] = useState("recentes");
 
   useEffect(() => {
-    carregarProdutos();
+    function lerCategoriaURL() {
+      setCategoriaSelecionada(new URLSearchParams(window.location.search).get("categoria") || "todas");
+    }
+    lerCategoriaURL();
+    window.addEventListener("popstate", lerCategoriaURL);
+    return () => window.removeEventListener("popstate", lerCategoriaURL);
   }, []);
 
-  async function carregarProdutos() {
-    try {
-      setCarregando(true);
-      setErro("");
-
-      const {
-        data,
-        error,
-      } = await supabase
-        .from("products")
-        .select("*")
-        .eq("ativo", true)
-        .order(
-          "criado_em",
-          {
-            ascending: false,
-          }
-        );
-
-      if (error) {
-        throw error;
-      }
-
-      setProdutos(
-        (data ?? []) as Produto[]
-      );
-    } catch (error) {
-      console.error(
-        "Erro ao carregar produtos:",
-        error
-      );
-
-      setErro(
-        "Não foi possível carregar os produtos."
-      );
-    } finally {
-      setCarregando(false);
-    }
+  function selecionarCategoria(categoria: string) {
+    setCategoriaSelecionada(categoria);
+    const url = new URL(window.location.href);
+    if (categoria === "todas") url.searchParams.delete("categoria");
+    else url.searchParams.set("categoria", categoria);
+    window.history.pushState(null, "", url.pathname + url.search + url.hash);
   }
+
+  useEffect(() => {
+    let ativo = true;
+    supabase.from("products").select("*").eq("ativo", true)
+      .order("criado_em", { ascending: false }).then(({ data, error }) => {
+        if (!ativo) return;
+        if (error) setErro("Não foi possível carregar os produtos.");
+        else setProdutos((data ?? []) as Produto[]);
+        setCarregando(false);
+      }, () => {
+        if (!ativo) return;
+        setErro("Não foi possível carregar os produtos.");
+        setCarregando(false);
+      });
+    return () => { ativo = false; };
+  }, []);
 
   function normalizarTexto(
     texto: string
@@ -299,7 +288,7 @@ export default function LojaPage() {
                 categoriaSelecionada
               }
               onChange={(event) =>
-                setCategoriaSelecionada(
+                selecionarCategoria(
                   event.target.value
                 )
               }
@@ -394,7 +383,7 @@ export default function LojaPage() {
                   type="button"
                   onClick={() => {
                     setBusca("");
-                    setCategoriaSelecionada(
+                    selecionarCategoria(
                       "todas"
                     );
                   }}

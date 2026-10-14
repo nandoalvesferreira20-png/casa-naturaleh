@@ -7,6 +7,7 @@ type ProductCardProps = {
   slug: string;
   imagem: string;
   estoque: number;
+  headingLevel?: 2 | 3;
 };
 
 export default function ProductCard({
@@ -16,7 +17,9 @@ export default function ProductCard({
   slug,
   imagem,
   estoque,
+  headingLevel = 2,
 }: ProductCardProps) {
+  const Heading = headingLevel === 3 ? "h3" : "h2";
   const precoFormatado = preco.toLocaleString("pt-BR", {
     style: "currency",
     currency: "BRL",
@@ -44,9 +47,9 @@ export default function ProductCard({
           {categoria}
         </span>
 
-        <h2 className="mt-2 text-lg font-semibold">
+        <Heading className="mt-2 text-lg font-semibold">
           {nome}
-        </h2>
+        </Heading>
 
         <div className="mt-5 flex items-center justify-between gap-4">
           <span className="text-lg font-semibold">

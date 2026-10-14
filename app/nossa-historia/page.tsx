@@ -71,18 +71,6 @@ export default function NossaHistoriaPage() {
         </ol>
       </section>
 
-      <section className={`${styles.container} ${styles.chapter}`} aria-labelledby="capitulo-titulo">
-        <FotoPendente legenda="Foto da construção da loja" />
-        <div>
-          <p className={styles.eyebrow}>Cuidado em cada detalhe</p>
-          <h2 id="capitulo-titulo" className={styles.heading}>O começo de um novo capítulo</h2>
-          <div className={styles.prose}>
-            <p>Foram meses de planejamento, escolhas e aprendizados. Cada fornecedor, cada detalhe do espaço e cada produto colocado nas prateleiras carregou um pouco da nossa dedicação.</p>
-            <p>Mais do que montar uma estrutura comercial, queríamos construir um lugar do qual nossa família pudesse se orgulhar e onde cada pessoa se sentisse bem-vinda.</p>
-          </div>
-        </div>
-      </section>
-
       <section className={styles.inauguration} aria-labelledby="inauguracao-titulo">
         <div className={styles.container}>
           <p className={styles.eyebrow}>O dia em que abrimos as portas.</p>

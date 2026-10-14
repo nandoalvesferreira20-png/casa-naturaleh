@@ -20,7 +20,7 @@
 .prose { font-size: 15px; line-height: 1.95; color: #555e55; }
 .prose p + p { margin-top: 20px; }
 .origin .prose { margin-top: 28px; max-width: 660px; }
-.journey { padding-block: 36px 84px; }
+.journey { padding-block: 36px 64px; }
 .heading { font-size: clamp(28px, 3.2vw, 42px); line-height: 1.25; font-weight: 500; letter-spacing: -.045em; text-wrap: balance; }
 .journey .heading { margin-top: 14px; }
 .timeline { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 52px; list-style: none; }
@@ -30,9 +30,8 @@
 .year { display: block; font-size: 44px; font-weight: 400; letter-spacing: -.05em; line-height: 1.2; }
 .timeline h3 { font-size: 17px; font-weight: 600; margin-top: 18px; }
 .timeline p { font-size: 14px; line-height: 1.9; margin-top: 12px; max-width: 300px; color: #555e55; }
-.chapter { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 72px; padding-block: 48px 104px; }
-.chapter .heading, .future .heading { margin-top: 16px; }
-.chapter .prose, .future .prose { margin-top: 26px; }
+.future .heading { margin-top: 16px; }
+.future .prose { margin-top: 26px; }
 .placeholder { aspect-ratio: 4 / 3; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 16px; background: #e9eadf; border: 1px solid #89987845; color: #555e55; text-align: center; padding: 24px; }
 .placeholder figcaption span { display: block; font-size: 14px; }
 .placeholder figcaption small { display: block; font-size: 11px; margin-top: 6px; }
@@ -55,7 +54,7 @@
 .cta:focus-visible, .readLink:focus-visible { outline: 2px solid var(--color-dark); outline-offset: 5px; }
 @media (max-width: 900px) {
   .container { width: calc(100% - 48px); }
-  .hero, .origin, .chapter, .inaugurationGrid { gap: 32px; }
+  .hero, .origin, .inaugurationGrid { gap: 32px; }
   .hero h1 { font-size: 68px; }
   .heroLead { font-size: 18px; }
   .future { gap: 48px; }
@@ -78,7 +77,6 @@
   .year { font-size: 40px; }
   .timeline h3 { margin-top: 12px; }
   .timeline p { max-width: none; margin-top: 8px; }
-  .chapter { grid-template-columns: 1fr; padding-block: 24px 56px; gap: 28px; }
   .inauguration { padding-block: 48px; }
   .date { font-size: clamp(43px, 10vw, 70px); }
   .date span { display: block; }
