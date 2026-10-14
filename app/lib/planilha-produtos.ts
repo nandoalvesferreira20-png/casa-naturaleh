@@ -1,6 +1,6 @@
 import * as XLSX from "xlsx";
 import { categoriaOficial, ERRO_REVISAO_CATEGORIA, ERRO_CATEGORIA_OFICIAL } from "./categorias-importacao";
-import { LIMITE_LINHAS, valorAtivo, erroImagem, type LinhaImportacao, type ImagemImportacao } from "./importacao-produtos";
+import { LIMITE_LINHAS, valorAtivo, erroImagem, interpretarEstoque, type LinhaImportacao, type ImagemImportacao } from "./importacao-produtos";
 
 export const normalizarNome = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim().replace(/\s+/g, " ");
 export const gerarSlug = (s: string) => normalizarNome(s).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -10,7 +10,7 @@ const aliases = {
   descricao: ["descricao", "descricao complementar"], estoque: ["estoque", "saldo", "saldo de estoque", "estoque atual"],
   ativo: ["ativo", "status", "situacao"], sku: ["sku", "codigo (sku)", "codigo"],
   imagem: ["url imagem 1", "imagem principal", "url imagem", "url de imagem", "imagem"],
-  subCategoria: ["sub-categoria", "subcategoria"], marca: ["marca"], unidade: ["unidade", "peso"],
+  subCategoria: ["sub-categoria", "subcategoria"], marca: ["marca"], unidade: ["unidade"],
 } as const;
 export function parsePreco(valor: unknown): number | undefined {
   if (typeof valor === "number") return Number.isFinite(valor) && valor > 0 ? valor : undefined;
@@ -45,14 +45,14 @@ export function analisarPlanilha(buffer: Buffer, categoriaPadrao = "") {
       const imagens = get("imagem").split(/[;\n|]+/).map(s => s.trim()).filter(Boolean);
       const imagem = imagens.find(urlImagemValida) ?? imagens[0] ?? "";
       if (imagens.length > 1) avisos.push("Somente a primeira imagem válida será usada.");
-      if (!estoque) avisos.push("Estoque ausente: será usado 0.");
+      if (mapeamento.estoque < 0) avisos.push("Coluna estoque ausente: será usado 0.");
       if (!imagem) avisos.push("Imagem ausente: produto será importado sem imagem.");
       return { linha, erros, avisos, sku: get("sku"), imagemOriginal: imagem,
-        categoriaOriginal: get("categoria"), subCategoria: get("subCategoria"), marca: get("marca"), unidade: get("unidade"), produto: {
+        categoriaOriginal: get("categoria"), subCategoria: get("subCategoria"), marca: get("marca"), unidade: mapeamento.unidade < 0 ? undefined : get("unidade"), produto: {
         nome: get("nome"), slug: get("slug") || gerarSlug(get("nome")),
         categoria: (get("categoria") || categoriaPadrao).trim().replace(/\s+/g, " "),
         preco: preco === undefined ? get("preco") : String(preco), descricao: get("descricao"),
-        estoque: estoque || "0", ativo: get("ativo") || "true", imagem,
+        estoque: mapeamento.estoque < 0 ? "0" : estoque, ativo: get("ativo") || "true", imagem,
       } };
     });
     return { linhas, relatorio: { aba: nome, linhaCabecalho: inicio + 1, colunas: cabecalho, mapeamento: Object.fromEntries(Object.entries(mapeamento).map(([k, i]) => [k, i < 0 ? null : cabecalho[i]])), total: linhas.length, urls: linhas.filter(l => urlImagemValida(l.produto.imagem)).length } };
@@ -83,7 +83,8 @@ export function validarProdutos(linhas: LinhaImportacao[], imagens: ImagemImport
     } else if (!produto.categoria) erros.push("Selecione uma categoria padrão ou informe categoria na planilha");
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(produto.slug)) erros.push("Slug inválido");
     if (parsePreco(produto.preco) === undefined) erros.push("Preço inválido");
-    if (!/^\d+$/.test(produto.estoque) || !Number.isSafeInteger(Number(produto.estoque)) || Number(produto.estoque) > 2147483647) erros.push("Estoque inválido");
+    const estoque = interpretarEstoque(produto.estoque, l.unidade);
+    if (estoque.erro) erros.push(estoque.erro);
     if (valorAtivo(produto.ativo) === undefined) erros.push("Ativo inválido");
     if (produto.imagem) {
       if (/^[a-z][a-z0-9+.-]*:/i.test(produto.imagem)) { if (!urlImagemValida(produto.imagem)) erros.push("URL de imagem inválida"); }
@@ -93,6 +94,6 @@ export function validarProdutos(linhas: LinhaImportacao[], imagens: ImagemImport
         else { const erro = erroImagem(arquivos[0]); if (erro) erros.push(erro); }
       }
     }
-    return { ...l, produto, erros, existente };
+    return { ...l, produto, erros, existente, unidadeNormalizada: estoque.unidadeNormalizada, estoqueInterno: estoque.estoqueInterno };
   });
 }

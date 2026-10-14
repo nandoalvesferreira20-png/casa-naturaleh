@@ -74,7 +74,7 @@ function ambiente(opcoes = {}) {
         select: campo => {
           const consulta = { order: () => consulta, range: async () => {
             eventos.push('select:nome,slug');
-            return { data: (opcoes.existentes ?? []).map(slug => ({ slug, nome: slug })), error: null };
+            return { data: (opcoes.existentes ?? []).map(slug => ({ slug, nome: slug })), error: opcoes.semUnidade && campo.includes('unidade') ? new Error('column unidade does not exist') : null };
           }, in: async () => {
           eventos.push(`select:${campo}`);
           if (campo === 'slug') return { data: (opcoes.existentes ?? []).map(slug => ({ slug })), error: null };
@@ -170,10 +170,11 @@ test('planilha real XLS identifica cabe?alho e mapeamento sem alterar original',
   assert.equal(resultado.linhas.length, 656);
   assert.equal(resultado.relatorio.mapeamento.nome, 'Produto');
   assert.equal(resultado.relatorio.mapeamento.preco, 'Preço');
-  assert.equal(resultado.relatorio.mapeamento.estoque, null);
+  assert.equal(resultado.relatorio.mapeamento.estoque, 'Estoque');
   assert.equal(resultado.relatorio.mapeamento.imagem, 'URL imagem 1');
   assert.equal(resultado.linhas[0].produto.preco, '14.9');
-  assert.equal(resultado.linhas[0].produto.estoque, '0');
+  assert.equal(resultado.linhas[0].produto.estoque, '2.106');
+  assert.equal(resultado.linhas[0].unidade, 'KG');
 });
 test('XLS e XLSX, pre?mbulo, categoria padrão e status', () => {
   for (const bookType of ['xls', 'xlsx']) {
@@ -265,12 +266,69 @@ test('download valida HTTP, MIME, tamanho, redirect e fixa DNS público', async 
   assert.equal((await (await executar([{status:302,headers:{location:'/final.webp'}}, {}])).promise).tipo,'image/webp');
 });
 
-test('planilha real tem 655 URLs HTTP e duas pendências sem categoria padrão', () => {
+test('planilha real preserva erros de estoque, URL e categoria ausente', () => {
   const r = planilha.analisarPlanilha(readFileSync(new URL('../produtos_2026-10-08-1.xls', import.meta.url)));
   const v = planilha.validarProdutos(r.linhas, [], []);
   assert.equal(r.relatorio.urls,655);
-  assert.equal(v.filter(l => !l.erros.length).length,654);
-  assert.deepEqual(v.filter(l => l.erros.length).map(l => l.linha),[258,593]);
+  assert.equal(v.filter(l => !l.erros.length).length,641);
+  assert.equal(v.filter(l => l.erros.some(e => e.startsWith('Estoque inválido'))).length,13);
+});
+
+test('peso converte exatamente para gramas e aceita os dois separadores decimais', () => {
+  for (const [valor, esperado] of [['1',1000],['1.5',1500],['1,5',1500],['13.43',13430],['13,43',13430],['2.5',2500],['2,5',2500],['0.75',750],['0,75',750],['0.750',750],['0,750',750],['0.250',250],['0,250',250],['10.000',10000],['2.106',2106],['5.04',5040]]) {
+    assert.equal(validacao.parsePeso(valor), esperado, valor);
+  }
+  for (const valor of ['texto','-1','','0.0001','2147483.648','1.234,56','10.000 kg']) assert.equal(validacao.parsePeso(valor), undefined, valor);
+  for (const valor of ['1','5','10']) assert.equal(validacao.parseEstoqueUnitario(valor), Number(valor));
+  for (const valor of ['texto','-1','','1.5','1,5','2147483648']) assert.equal(validacao.parseEstoqueUnitario(valor), undefined);
+  for (const unidade of ['UN','UND','unidade','UNIDADES']) assert.equal(validacao.interpretarEstoque('13',unidade).estoqueInterno,13);
+  assert.equal(validacao.interpretarEstoque('1','CX').erro,'Unidade não reconhecida');
+  assert.equal(validacao.interpretarEstoque('1','').erro,'Unidade não reconhecida');
+  assert.equal(validacao.formatarEstoqueImportacao('13.43','KG'),'13,43 kg');
+  assert.equal(validacao.formatarEstoqueImportacao('13','UN'),'13 unidades');
+});
+
+test('validação é idempotente, mantém estoque original e preço, e grava unidade junto aos gramas', async () => {
+  const r = planilha.analisarPlanilha(Buffer.from('Produto;Preço;Estoque;Unidade;Categoria\nPeso;79,90;13,43;KG;Naturais'));
+  const v = planilha.validarProdutos(r.linhas, [], []);
+  assert.equal(v[0].estoqueInterno,13430);
+  assert.equal(v[0].produto.estoque,'13,43');
+  assert.equal(v[0].produto.preco,'79.9');
+  assert.equal(planilha.validarProdutos(v,[],[])[0].estoqueInterno,13430);
+  const app = ambiente();
+  const { dados } = await app.executar({csv: cabecalho.trimEnd()+',unidade\n'+linha().replace(',15,true,',',13.43,true,')+',KG'});
+  assert.equal(dados.importados,1);
+  assert.equal(app.inseridos[0].estoque,13430);
+  assert.equal(app.inseridos[0].unidade,'KG');
+});
+
+test('estoque obrigatório vazio não vira zero; coluna ausente mantém compatibilidade', () => {
+  const r = planilha.analisarPlanilha(Buffer.from('Produto;Preço;Estoque;Unidade;Categoria\nPeso;10;;KG;Naturais'));
+  assert.ok(planilha.validarProdutos(r.linhas,[],[])[0].erros.some(e=>e.startsWith('Estoque inválido')));
+});
+
+test('schema sem unidade bloqueia importação antes de upload e permite preview', async () => {
+  const app = ambiente({semUnidade:true});
+  assert.equal((await app.executar({acao:'validar'})).status,200);
+  const resposta = await app.executar();
+  assert.equal(resposta.status,400);
+  assert.match(resposta.dados.error,/products.unidade/);
+  assert.equal(app.inseridos.length,0);
+  assert.ok(!app.eventos.includes('upload'));
+  assert.ok(!app.eventos.includes('download'));
+});
+
+test('planilha real recupera somente decimais KG e preserva os demais erros', () => {
+  const r = planilha.analisarPlanilha(readFileSync(new URL('../produtos_2026-10-08-1.xls',import.meta.url)));
+  const v = planilha.validarProdutos(revisao.classificarLinhas(r.linhas),[],[]);
+  assert.equal(v.filter(l=>!l.erros.length).length,605);
+  assert.equal(v.filter(l=>l.erros.length).length,51);
+  assert.equal(v.filter(l=>l.unidade==='KG').length,289);
+  assert.equal(v.filter(l=>l.unidade==='UN').length,367);
+  const decimais = v.filter(l=>/^\d+[.,]\d+$/.test(l.produto.estoque));
+  assert.equal(decimais.length,278);
+  assert.ok(decimais.every(l=>l.unidadeNormalizada==='KG' && l.estoqueInterno!==undefined));
+  assert.equal(decimais.filter(l=>!l.erros.length).length,274);
 });
 
 test('API grava categoria final corrigida e mantém sugestão apenas no preview', async () => {

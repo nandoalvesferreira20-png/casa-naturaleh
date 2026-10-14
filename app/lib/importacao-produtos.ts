@@ -18,9 +18,53 @@ export type LinhaImportacao = {
   subCategoria?: string;
   marca?: string;
   unidade?: string;
+  unidadeNormalizada?: "KG" | "UN";
+  estoqueInterno?: number;
   classificacao?: import("./categorias-importacao").ClassificacaoCategoria;
   categoriaManual?: boolean;
 };
+
+export function normalizarUnidade(valor: string | undefined): "KG" | "UN" | undefined {
+  const s = (valor ?? "UN").trim().toUpperCase();
+  if (["UN", "UND", "UNIDADE", "UNIDADES"].includes(s)) return "UN";
+  if (s === "KG") return "KG";
+}
+
+export function parseEstoqueUnitario(valor: string): number | undefined {
+  const s = valor.trim();
+  if (!/^\d+$/.test(s)) return;
+  const n = Number(s);
+  return Number.isSafeInteger(n) && n <= 2147483647 ? n : undefined;
+}
+
+// A planilha usa ponto decimal, inclusive 0.750. Não é separador de milhar.
+// Conversão por dígitos evita arredondamento binário e perda de frações de grama.
+export function parsePeso(valor: string): number | undefined {
+  const match = /^(\d+)(?:[.,](\d+))?$/.exec(valor.trim());
+  if (!match || (match[2]?.slice(3).replace(/0/g, "") ?? "")) return;
+  const gramas = Number(match[1] + (match[2] ?? "").slice(0, 3).padEnd(3, "0"));
+  return Number.isSafeInteger(gramas) && gramas <= 2147483647 ? gramas : undefined;
+}
+
+export function interpretarEstoque(valor: string, unidade: string | undefined) {
+  const unidadeNormalizada = normalizarUnidade(unidade);
+  if (!unidadeNormalizada) return { erro: "Unidade não reconhecida" };
+  const estoqueInterno = unidadeNormalizada === "KG" ? parsePeso(valor) : parseEstoqueUnitario(valor);
+  const erro = estoqueInterno === undefined
+    ? unidadeNormalizada === "KG"
+      ? "Estoque inválido para KG: use peso não negativo, representável em gramas e dentro do limite integer"
+      : "Estoque inválido para produto unitário: use um inteiro maior ou igual a zero dentro do limite integer"
+    : undefined;
+  return { unidadeNormalizada, estoqueInterno, erro };
+}
+
+export function formatarEstoqueImportacao(valor: string, unidade: string | undefined): string {
+  const { unidadeNormalizada, estoqueInterno } = interpretarEstoque(valor, unidade);
+  if (estoqueInterno === undefined) return valor || "—";
+  return unidadeNormalizada === "KG"
+    ? `${(estoqueInterno / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 3 })} kg`
+    : `${estoqueInterno.toLocaleString("pt-BR")} unidades`;
+}
 export type ResultadoImportacao = {
   importados: number;
   ignorados: number;
@@ -64,6 +108,7 @@ export function lerCSV(texto: string): LinhaImportacao[] {
   if (registros.length > LIMITE_LINHAS) throw new Error(`Importe no máximo ${LIMITE_LINHAS} produtos por lote.`);
   return registros.map(registro => ({
     linha: registro.linha,
+    unidade: cabecalho.includes("unidade") ? registro.campos[cabecalho.indexOf("unidade")] : undefined,
     produto: Object.fromEntries(colunas.map(c => [c, registro.campos[cabecalho.indexOf(c)] ?? ""])) as Record<Coluna, string>,
     erros: registro.campos.length === cabecalho.length ? [] : ["Quantidade de campos diferente do cabeçalho"],
   }));
@@ -85,12 +130,14 @@ export function erroImagem(imagem: ImagemImportacao): string | undefined {
 export function validarLinhas(linhas: LinhaImportacao[], imagens: ImagemImportacao[], existentes: Set<string>): LinhaImportacao[] {
   const frequencia = new Map<string, number>();
   for (const { produto } of linhas) frequencia.set(produto.slug, (frequencia.get(produto.slug) ?? 0) + 1);
-  return linhas.map(({ linha, produto, erros: anteriores }) => {
+  return linhas.map(l => {
+    const { linha, produto, erros: anteriores } = l;
     const erros = [...anteriores];
     for (const campo of ["nome", "slug", "categoria", "imagem"] as const) if (!produto[campo]) erros.push(`Campo obrigatório ausente: ${campo}`);
     if (produto.slug && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(produto.slug)) erros.push("Slug inválido: use letras minúsculas, números e hífens");
     if (!/^\d+(?:\.\d{1,2})?$/.test(produto.preco) || !Number.isFinite(Number(produto.preco)) || Number(produto.preco) <= 0) erros.push("Preço inválido: use ponto decimal e valor maior que zero");
-    if (!/^\d+$/.test(produto.estoque) || !Number.isSafeInteger(Number(produto.estoque)) || Number(produto.estoque) > 2147483647) erros.push("Estoque inválido: use um inteiro maior ou igual a zero");
+    const estoque = interpretarEstoque(produto.estoque, l.unidade);
+    if (estoque.erro) erros.push(estoque.erro);
     if (valorAtivo(produto.ativo) === undefined) erros.push("Ativo inválido: use true, false, 1, 0, sim, nao ou não");
     if ((frequencia.get(produto.slug) ?? 0) > 1) erros.push("Slug duplicado no CSV");
     if (existentes.has(produto.slug)) erros.push("Produto já existente");
@@ -98,6 +145,6 @@ export function validarLinhas(linhas: LinhaImportacao[], imagens: ImagemImportac
     if (!arquivos.length) erros.push("Imagem não encontrada");
     else if (arquivos.length > 1) erros.push("Mais de uma imagem com o mesmo nome");
     else { const erro = erroImagem(arquivos[0]); if (erro) erros.push(erro); }
-    return { linha, produto, erros };
+    return { ...l, linha, produto, erros, unidadeNormalizada: estoque.unidadeNormalizada, estoqueInterno: estoque.estoqueInterno };
   });
 }

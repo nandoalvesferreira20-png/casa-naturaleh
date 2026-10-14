@@ -7,7 +7,7 @@ import {
   useState,
 } from "react";
 
-import { LIMITE_CSV, LIMITE_LOTE, type LinhaImportacao, type ResultadoImportacao } from "../../lib/importacao-produtos";
+import { LIMITE_CSV, LIMITE_LOTE, formatarEstoqueImportacao, type LinhaImportacao, type ResultadoImportacao } from "../../lib/importacao-produtos";
 import { CATEGORIAS_OFICIAIS } from "../../lib/categorias-importacao";
 import { aplicarCategoriaManual, type EdicaoCategoria } from "../../lib/revisao-categorias";
 
@@ -23,6 +23,7 @@ type Produto = {
   imagem: string;
   descricao: string | null;
   estoque: number;
+  unidade?: "KG" | "UN" | null;
   ativo: boolean;
   criado_em?: string;
 };
@@ -213,13 +214,13 @@ function ImportacaoProdutosModal({ obterToken, onConcluir, onFechar }: {
           {linhas.length > 0 && <div className="max-h-80 overflow-auto rounded-2xl border border-[var(--color-bg-soft)]">
             <table className="w-full text-left text-sm">
               <thead className="sticky top-0 bg-[var(--color-bg)]"><tr><th className="px-4 py-3"><input type="checkbox" aria-label="Selecionar todos os produtos" disabled={importando || validando} checked={linhas.length > 0 && selecionadas.length === linhas.length} onChange={e => setSelecionadas(e.target.checked ? linhas.map(l => l.linha) : [])} /></th>{["Linha", "Produto", "Categoria sugerida / final", "Confiança", "Preço", "Estoque", "Slug", "Imagem", "Status"].map(titulo => <th key={titulo} scope="col" className="px-4 py-3 font-semibold">{titulo}</th>)}</tr></thead>
-              <tbody>{linhas.map(({ linha, produto, erros, avisos, sku, classificacao, categoriaManual, categoriaOriginal }) => <tr key={linha} className={erros.length ? "border-t border-[var(--color-bg-soft)] bg-[var(--color-bg-soft)]/40" : "border-t border-[var(--color-bg-soft)]"}>
+              <tbody>{linhas.map(({ linha, produto, unidade, erros, avisos, sku, classificacao, categoriaManual, categoriaOriginal }) => <tr key={linha} className={erros.length ? "border-t border-[var(--color-bg-soft)] bg-[var(--color-bg-soft)]/40" : "border-t border-[var(--color-bg-soft)]"}>
                 <td className="px-4 py-3"><input type="checkbox" aria-label={`Selecionar ${produto.nome}`} disabled={importando || validando} checked={selecionadas.includes(linha)} onChange={e => setSelecionadas(atual => e.target.checked ? [...atual, linha] : atual.filter(id => id !== linha))} /></td>
                 <td className="px-4 py-3">{linha}</td><td className="px-4 py-3">{produto.nome}{sku && <p className="text-xs">SKU: {sku}</p>}</td>
                 <td className="min-w-56 px-4 py-3"><select aria-label={`Categoria de ${produto.nome}`} disabled={importando || validando} value={!categoriaManual && (classificacao?.confianca ?? 1) < .6 ? "" : produto.categoria} onChange={e => definirCategoria([linha], e.target.value)} className="w-full rounded-xl border p-2"><option value="" disabled>Escolha uma categoria</option>{CATEGORIAS_OFICIAIS.map(c => <option key={c} value={c}>{c}</option>)}</select><p className="text-xs">Original: {categoriaOriginal || "ausente"}</p>{classificacao && <p className="text-xs">Sugestão: {classificacao.categoria || "sem categoria"} · {classificacao.motivo}</p>}</td>
                 <td className="px-4 py-3">{classificacao ? `${Math.round(classificacao.confianca * 100)}%` : "—"}{!categoriaManual && classificacao && classificacao.confianca >= .6 && classificacao.confianca < .8 && <button type="button" disabled={importando || validando} className="mt-2 block underline" onClick={() => definirCategoria([linha], produto.categoria)}>Confirmar categoria</button>}</td>
                 <td className="whitespace-nowrap px-4 py-3">{produto.preco && Number.isFinite(Number(produto.preco)) ? Number(produto.preco).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : produto.preco || "—"}</td>
-                <td className="px-4 py-3">{produto.estoque || "—"}</td><td className="px-4 py-3">{produto.slug}</td><td className="break-all px-4 py-3">{erros.some(e => e.includes("URL de imagem")) ? "URL inválida" : produto.imagem ? "Imagem encontrada" : "Imagem ausente"}<span className="block text-xs">{produto.imagem}</span></td>
+                <td className="px-4 py-3">{formatarEstoqueImportacao(produto.estoque, unidade)}</td><td className="px-4 py-3">{produto.slug}</td><td className="break-all px-4 py-3">{erros.some(e => e.includes("URL de imagem")) ? "URL inválida" : produto.imagem ? "Imagem encontrada" : "Imagem ausente"}<span className="block text-xs">{produto.imagem}</span></td>
                 <td className="min-w-48 px-4 py-3">{erros.length ? erros.join("; ") : "✓ Válido"}<p>{categoriaManual ? "Categoria revisada" : classificacao?.status}</p>{avisos?.map(aviso => <p key={aviso} className="text-xs">{aviso}</p>)}</td>
               </tr>)}</tbody>
             </table>

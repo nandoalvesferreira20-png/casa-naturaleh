@@ -1,0 +1,349 @@
+{
+  "arquivo": "produtos_2026-10-08-1.xls",
+  "relatorio": {
+    "aba": "Produtos",
+    "linhaCabecalho": 1,
+    "colunas": [
+      "ID",
+      "Código (SKU)",
+      "Produto",
+      "Unidade",
+      "Preço",
+      "Estoque",
+      "GTIN/EAN",
+      "URL imagem 1",
+      "Categoria",
+      "Sub-Categoria",
+      "Marca"
+    ],
+    "mapeamento": {
+      "nome": "Produto",
+      "slug": null,
+      "categoria": "Categoria",
+      "preco": "Preço",
+      "descricao": null,
+      "estoque": "Estoque",
+      "ativo": null,
+      "sku": "Código (SKU)",
+      "imagem": "URL imagem 1",
+      "subCategoria": "Sub-Categoria",
+      "marca": "Marca",
+      "unidade": "Unidade"
+    },
+    "total": 656,
+    "urls": 655
+  },
+  "unidades": {
+    "KG": 289,
+    "UN": 367
+  },
+  "erros": {
+    "Estoque inválido para produto unitário: use um inteiro maior ou igual a zero dentro do limite integer": 9,
+    "Categoria incerta: escolha uma categoria oficial antes de importar": 39,
+    "Estoque inválido para KG: use peso não negativo, representável em gramas e dentro do limite integer": 4,
+    "URL de imagem inválida": 1
+  },
+  "validos": 605,
+  "invalidos": 51,
+  "decimais": 278,
+  "invalidosKG": 8,
+  "exemplos": [
+    {
+      "linha": 32,
+      "nome": "AMENDOIM  PRALINÊ 50g",
+      "unidade": "UN",
+      "estoque": "-5",
+      "preco": "4",
+      "erros": [
+        "Estoque inválido para produto unitário: use um inteiro maior ou igual a zero dentro do limite integer"
+      ]
+    },
+    {
+      "linha": 44,
+      "nome": "ARGILA BRANCA - 100g",
+      "unidade": "KG",
+      "estoque": "9.84",
+      "preco": "2.5",
+      "erros": [
+        "Categoria incerta: escolha uma categoria oficial antes de importar"
+      ]
+    },
+    {
+      "linha": 47,
+      "nome": "AVEIA EM FLOCOS GROSSOS - 100g",
+      "unidade": "KG",
+      "estoque": "FORA DE LINHA",
+      "preco": "1.389",
+      "erros": [
+        "Estoque inválido para KG: use peso não negativo, representável em gramas e dentro do limite integer"
+      ]
+    },
+    {
+      "linha": 52,
+      "nome": "BALA DE COCO 100G",
+      "unidade": "UN",
+      "estoque": "-7",
+      "preco": "10",
+      "erros": [
+        "Estoque inválido para produto unitário: use um inteiro maior ou igual a zero dentro do limite integer"
+      ]
+    },
+    {
+      "linha": 53,
+      "nome": "BALA DE GOMA ACIDA CITRUS MINHOCA - 100g",
+      "unidade": "KG",
+      "estoque": "-0.614",
+      "preco": "3.989",
+      "erros": [
+        "Estoque inválido para KG: use peso não negativo, representável em gramas e dentro do limite integer"
+      ]
+    }
+  ],
+  "formatos": [
+    {
+      "unidade": "KG",
+      "estoque": "2.106",
+      "preco": "14.9"
+    },
+    {
+      "unidade": "KG",
+      "estoque": "0.934",
+      "preco": "17.9"
+    },
+    {
+      "unidade": "KG",
+      "estoque": "5.04",
+      "preco": "4.489"
+    },
+    {
+      "unidade": "UN",
+      "estoque": "4",
+      "preco": "38"
+    },
+    {
+      "unidade": "KG",
+      "estoque": "2.918",
+      "preco": "1.9"
+    }
+  ],
+  "diagnosticoAntes": {
+    "erros": {
+      "Estoque inválido": 291,
+      "Categoria incerta: escolha uma categoria oficial antes de importar": 39,
+      "URL de imagem inválida": 1
+    },
+    "validos": 331,
+    "invalidos": 325,
+    "estoqueInvalidoKG": 282,
+    "estoqueInvalidoOutraUnidade": 9,
+    "decimaisNaoNegativos": 278,
+    "decimaisNegativos": 3,
+    "exemplos": [
+      {
+        "linha": 2,
+        "nome": "ABACAXI DESIDRATADO - 100g",
+        "unidade": "KG",
+        "estoque": 2.106,
+        "preco": 14.9,
+        "erros": [
+          "Estoque inválido"
+        ]
+      },
+      {
+        "linha": 3,
+        "nome": "AÇAI EM PO DESIDRATADO - 100g",
+        "unidade": "KG",
+        "estoque": 0.934,
+        "preco": 17.9,
+        "erros": [
+          "Estoque inválido"
+        ]
+      },
+      {
+        "linha": 4,
+        "nome": "AÇUCAR DE COCO - 100g",
+        "unidade": "KG",
+        "estoque": 5.04,
+        "preco": 4.489,
+        "erros": [
+          "Estoque inválido"
+        ]
+      },
+      {
+        "linha": 6,
+        "nome": "AÇUCAR DEMERARA ORGANICO - 100g",
+        "unidade": "KG",
+        "estoque": 2.918,
+        "preco": 1.9,
+        "erros": [
+          "Estoque inválido"
+        ]
+      },
+      {
+        "linha": 7,
+        "nome": "AÇUCAR MASCAVO - 100g",
+        "unidade": "KG",
+        "estoque": 2.144,
+        "preco": 1.69,
+        "erros": [
+          "Estoque inválido"
+        ]
+      }
+    ]
+  },
+  "tiposOriginais": {
+    "preco": [
+      "number"
+    ],
+    "estoque": [
+      "number",
+      "string"
+    ]
+  },
+  "estoquesNaoNumericos": [
+    {
+      "linha": 47,
+      "nome": "AVEIA EM FLOCOS GROSSOS - 100g",
+      "unidade": "KG",
+      "estoque": "FORA DE LINHA",
+      "preco": 1.389,
+      "erros": [
+        "Estoque inválido para KG: use peso não negativo, representável em gramas e dentro do limite integer"
+      ]
+    },
+    {
+      "linha": 370,
+      "nome": "GUARANÁ ANTARCTICA ZERO 200ML",
+      "unidade": "UN",
+      "estoque": "FORA DE LINHA",
+      "preco": 4,
+      "erros": [
+        "Estoque inválido para produto unitário: use um inteiro maior ou igual a zero dentro do limite integer"
+      ]
+    },
+    {
+      "linha": 389,
+      "nome": "IOGURTE FIT PARMALAT 120G",
+      "unidade": "UN",
+      "estoque": "FORA DE LINHA",
+      "preco": 6.9,
+      "erros": [
+        "Estoque inválido para produto unitário: use um inteiro maior ou igual a zero dentro do limite integer"
+      ]
+    },
+    {
+      "linha": 390,
+      "nome": "IOGURTE FIT PARMALAT COCO 120G",
+      "unidade": "UN",
+      "estoque": "FORA DE LINHA",
+      "preco": 6.9,
+      "erros": [
+        "Estoque inválido para produto unitário: use um inteiro maior ou igual a zero dentro do limite integer"
+      ]
+    },
+    {
+      "linha": 391,
+      "nome": "IOGURTE FIT PARMALAT MORANGO 120G",
+      "unidade": "UN",
+      "estoque": "FORA DE LINHA",
+      "preco": 6.9,
+      "erros": [
+        "Estoque inválido para produto unitário: use um inteiro maior ou igual a zero dentro do limite integer"
+      ]
+    },
+    {
+      "linha": 412,
+      "nome": "LEITE JUSSARA LV DESNATADO 1 LITRO",
+      "unidade": "UN",
+      "estoque": "FORA DE LINHA",
+      "preco": 9.99,
+      "erros": [
+        "Categoria incerta: escolha uma categoria oficial antes de importar",
+        "Estoque inválido para produto unitário: use um inteiro maior ou igual a zero dentro do limite integer"
+      ]
+    },
+    {
+      "linha": 413,
+      "nome": "LEITE LONGA VIDA ITALAC 1 LITRO",
+      "unidade": "UN",
+      "estoque": "FORA DE LINHA",
+      "preco": 9.99,
+      "erros": [
+        "Categoria incerta: escolha uma categoria oficial antes de importar",
+        "Estoque inválido para produto unitário: use um inteiro maior ou igual a zero dentro do limite integer"
+      ]
+    }
+  ],
+  "negativos": [
+    {
+      "linha": 32,
+      "nome": "AMENDOIM  PRALINÊ 50g",
+      "unidade": "UN",
+      "estoque": -5,
+      "preco": 4,
+      "erros": [
+        "Estoque inválido para produto unitário: use um inteiro maior ou igual a zero dentro do limite integer"
+      ]
+    },
+    {
+      "linha": 52,
+      "nome": "BALA DE COCO 100G",
+      "unidade": "UN",
+      "estoque": -7,
+      "preco": 10,
+      "erros": [
+        "Estoque inválido para produto unitário: use um inteiro maior ou igual a zero dentro do limite integer"
+      ]
+    },
+    {
+      "linha": 53,
+      "nome": "BALA DE GOMA ACIDA CITRUS MINHOCA - 100g",
+      "unidade": "KG",
+      "estoque": -0.614,
+      "preco": 3.989,
+      "erros": [
+        "Estoque inválido para KG: use peso não negativo, representável em gramas e dentro do limite integer"
+      ]
+    },
+    {
+      "linha": 80,
+      "nome": "BARRA PROTEINA IM OVOMALT 45G",
+      "unidade": "UN",
+      "estoque": -13,
+      "preco": 10,
+      "erros": [
+        "Estoque inválido para produto unitário: use um inteiro maior ou igual a zero dentro do limite integer"
+      ]
+    },
+    {
+      "linha": 410,
+      "nome": "LEITE EM PÓ DESNATADO ARG - 100g",
+      "unidade": "KG",
+      "estoque": -4.536,
+      "preco": 5.49,
+      "erros": [
+        "Estoque inválido para KG: use peso não negativo, representável em gramas e dentro do limite integer"
+      ]
+    },
+    {
+      "linha": 580,
+      "nome": "TAPIOCA GRANULADA - 100g",
+      "unidade": "KG",
+      "estoque": -1.454,
+      "preco": 2.09,
+      "erros": [
+        "Estoque inválido para KG: use peso não negativo, representável em gramas e dentro do limite integer"
+      ]
+    }
+  ],
+  "xilitol": [
+    {
+      "linha": 653,
+      "nome": "XILITOL CRISTAL - 100g",
+      "unidade": "KG",
+      "estoque": 13.43,
+      "preco": 4.99,
+      "erros": []
+    }
+  ]
+}

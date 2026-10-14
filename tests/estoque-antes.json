@@ -1,0 +1,128 @@
+{
+  "arquivo": "produtos_2026-10-08-1.xls",
+  "relatorio": {
+    "aba": "Produtos",
+    "linhaCabecalho": 1,
+    "colunas": [
+      "ID",
+      "Código (SKU)",
+      "Produto",
+      "Unidade",
+      "Preço",
+      "Estoque",
+      "GTIN/EAN",
+      "URL imagem 1",
+      "Categoria",
+      "Sub-Categoria",
+      "Marca"
+    ],
+    "mapeamento": {
+      "nome": "Produto",
+      "slug": null,
+      "categoria": "Categoria",
+      "preco": "Preço",
+      "descricao": null,
+      "estoque": "Estoque",
+      "ativo": null,
+      "sku": "Código (SKU)",
+      "imagem": "URL imagem 1",
+      "subCategoria": "Sub-Categoria",
+      "marca": "Marca",
+      "unidade": "Unidade"
+    },
+    "total": 656,
+    "urls": 655
+  },
+  "unidades": {
+    "KG": 289,
+    "UN": 367
+  },
+  "erros": {
+    "Estoque inválido": 291,
+    "Categoria incerta: escolha uma categoria oficial antes de importar": 39,
+    "URL de imagem inválida": 1
+  },
+  "validos": 331,
+  "invalidos": 325,
+  "decimais": 278,
+  "invalidosKG": 282,
+  "exemplos": [
+    {
+      "linha": 2,
+      "nome": "ABACAXI DESIDRATADO - 100g",
+      "unidade": "KG",
+      "estoque": "2.106",
+      "preco": "14.9",
+      "erros": [
+        "Estoque inválido"
+      ]
+    },
+    {
+      "linha": 3,
+      "nome": "AÇAI EM PO DESIDRATADO - 100g",
+      "unidade": "KG",
+      "estoque": "0.934",
+      "preco": "17.9",
+      "erros": [
+        "Estoque inválido"
+      ]
+    },
+    {
+      "linha": 4,
+      "nome": "AÇUCAR DE COCO - 100g",
+      "unidade": "KG",
+      "estoque": "5.04",
+      "preco": "4.489",
+      "erros": [
+        "Estoque inválido"
+      ]
+    },
+    {
+      "linha": 6,
+      "nome": "AÇUCAR DEMERARA ORGANICO - 100g",
+      "unidade": "KG",
+      "estoque": "2.918",
+      "preco": "1.9",
+      "erros": [
+        "Estoque inválido"
+      ]
+    },
+    {
+      "linha": 7,
+      "nome": "AÇUCAR MASCAVO - 100g",
+      "unidade": "KG",
+      "estoque": "2.144",
+      "preco": "1.69",
+      "erros": [
+        "Estoque inválido"
+      ]
+    }
+  ],
+  "formatos": [
+    {
+      "unidade": "KG",
+      "estoque": "2.106",
+      "preco": "14.9"
+    },
+    {
+      "unidade": "KG",
+      "estoque": "0.934",
+      "preco": "17.9"
+    },
+    {
+      "unidade": "KG",
+      "estoque": "5.04",
+      "preco": "4.489"
+    },
+    {
+      "unidade": "UN",
+      "estoque": "4",
+      "preco": "38"
+    },
+    {
+      "unidade": "KG",
+      "estoque": "2.918",
+      "preco": "1.9"
+    }
+  ]
+}

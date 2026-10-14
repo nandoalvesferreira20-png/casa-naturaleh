@@ -33,7 +33,7 @@ Arquivo analisado: `produtos_2026-10-08-1.xls`, colocado pelo usuário na raiz d
 | Sub-Categoria | Não persistida; não concatenada silenciosamente à categoria |
 | Marca | Não persistida |
 
-Não há colunas de descrição, estoque, situação/status, peso ou slug. Os padrões são `descricao = ""`, `estoque = 0` com aviso, `ativo = true` e slug gerado pelo nome. Há somente uma coluna de imagem; não há colunas de galeria sendo descartadas.
+A versão atual da planilha real possui `Estoque` e `Unidade`: 289 produtos KG e 367 UN. Não há colunas de descrição, situação/status ou slug. Os padrões são `descricao = ""`, `ativo = true` e slug gerado pelo nome. Apenas quando a coluna estoque não existe usa-se 0 com aviso; células vazias em uma coluna existente são inválidas. Há somente uma coluna de imagem. Veja a análise atual em `estoque-importacao.md`.
 
 Pendências reais:
 
@@ -48,7 +48,7 @@ Com categoria padrão preenchida, a validação local passa a 655 válidos e 1 i
 
 O adaptador centraliza os aliases de cabeçalho e identifica nome e preço nas primeiras 50 linhas, inclusive quando existe preâmbulo. CSV aceita vírgula ou ponto e vírgula. XLS/XLSX são lidos com SheetJS. São permitidos até 1.000 produtos e 5 MB de planilha por requisição.
 
-Preços aceitam valores numéricos do Excel, vírgula decimal, ponto decimal, `R$` e milhares brasileiros, como `1.249,90`. Valores positivos com mais casas decimais já presentes no Excel são preservados, sem arredondamento silencioso. A apresentação monetária no preview usa BRL. Estoque precisa ser inteiro não negativo, dentro do intervalo do tipo integer do PostgreSQL. Valores inválidos geram erro.
+Preços aceitam valores numéricos do Excel, vírgula decimal, ponto decimal, `R$` e milhares brasileiros, como `1.249,90`. Valores positivos com mais casas decimais já presentes no Excel são preservados, sem arredondamento silencioso. A apresentação monetária no preview usa BRL. Estoque UN precisa ser inteiro não negativo. Estoque KG aceita ponto ou vírgula decimal e é convertido exatamente em gramas, dentro do intervalo integer do PostgreSQL. Frações de grama, negativos, vazios e texto são rejeitados. `0.750` significa 0,750 kg e `10.000` significa 10 kg. A unidade comercial é persistida junto ao estoque: `KG` identifica gramas internos; `UN` identifica unidades. Preços não são convertidos conforme a unidade.
 
 O slug automático usa minúsculas, remove acentos e caracteres especiais, converte separadores em hífens e remove hífens nas extremidades. CSV antigo pode fornecer slug explicitamente. Colisões de slug entre nomes diferentes dentro da planilha recebem `-2`, `-3`, etc. Correspondência com slug ou nome normalizado de produto existente é marcada como **Possível produto já existente** e ignorada. Nomes repetidos e SKUs repetidos dentro da planilha também são ignorados. Não há comparação de SKU com o banco porque esse campo não existe em `products`.
 

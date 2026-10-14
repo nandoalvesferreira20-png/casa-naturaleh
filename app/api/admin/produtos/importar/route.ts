@@ -52,8 +52,13 @@ export async function POST(request: NextRequest) {
     const { supabaseAdmin } = await import("../../../../lib/supabase-admin");
     const existentes: { nome: string; slug: string }[] = [];
     for (let offset = 0; ; offset += 1000) {
-      const { data, error } = await supabaseAdmin.from("products").select("nome,slug").order("id").range(offset, offset + 999);
-      if (error) throw new Error("Não foi possível consultar os produtos existentes.");
+      const consulta = acao === "importar"
+        ? supabaseAdmin.from("products").select("nome,slug,estoque,unidade")
+        : supabaseAdmin.from("products").select("nome,slug");
+      const { data, error } = await consulta.order("id").range(offset, offset + 999);
+      if (error) throw new Error(acao === "importar"
+        ? "Não foi possível verificar products.estoque e products.unidade. Verifique o schema antes de importar; nenhuma imagem ou produto foi gravado."
+        : "Não foi possível consultar os produtos existentes.");
       existentes.push(...(data ?? []));
       if (!data || data.length < 1000) break;
     }
@@ -71,7 +76,7 @@ export async function POST(request: NextRequest) {
     const storage = supabaseAdmin.storage.from("produtos");
     const preparados: {
       linha: number; caminho: string;
-      dados: { id: string; nome: string; slug: string; categoria: string; preco: number; imagem: string; descricao: string | null; estoque: number; ativo: boolean };
+      dados: { id: string; nome: string; slug: string; categoria: string; preco: number; imagem: string; descricao: string | null; estoque: number; unidade: "KG" | "UN"; ativo: boolean };
     }[] = [];
 
     async function remover(caminhos: string[]) {
@@ -85,7 +90,7 @@ export async function POST(request: NextRequest) {
 
     const cache = new Map<string, Promise<{ caminho: string; url: string }>>();
     let bytesEnviados = 0;
-    await concorrenciaLimitada(validas, async ({ linha, produto }) => {
+    await concorrenciaLimitada(validas, async ({ linha, produto, estoqueInterno, unidadeNormalizada }) => {
       let caminho = "";
       try {
         let url = "";
@@ -112,7 +117,7 @@ export async function POST(request: NextRequest) {
         }
         preparados.push({ linha, caminho, dados: {
           id: randomUUID(), nome: produto.nome, slug: produto.slug, categoria: produto.categoria,
-          preco: Number(produto.preco), estoque: Number(produto.estoque), ativo: valorAtivo(produto.ativo)!,
+          preco: Number(produto.preco), estoque: estoqueInterno!, unidade: unidadeNormalizada!, ativo: valorAtivo(produto.ativo)!,
           descricao: produto.descricao, imagem: url,
         } });
       } catch (error) {
