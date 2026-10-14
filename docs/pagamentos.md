@@ -1,5 +1,7 @@
 # Pagamentos — Casa Naturaleh
 
+> **Integração futura, pausada na V1.** O fluxo ativo agora é [Pix manual sem gateway](./pix-manual.md). O checkout não carrega Payment Brick nem chama `/api/payments`. Os handlers de cobrança e webhook retornam 503 enquanto `GATEWAY_PAYMENTS_ENABLED` estiver falso. As instruções abaixo documentam a arquitetura preservada, não a configuração necessária para a V1.
+
 Implementação da sprint de pagamentos. Integração externa ainda precisa ser homologada com as credenciais de teste do lojista. Nenhuma cobrança real ou alteração de estoque foi realizada durante o desenvolvimento.
 
 ## Arquitetura

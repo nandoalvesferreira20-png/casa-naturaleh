@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import ts from "typescript";
+import { EventEmitter } from "node:events";
 
 const require = createRequire(import.meta.url);
 function carregar(arquivo, dependencias = {}) {
@@ -13,6 +14,10 @@ function carregar(arquivo, dependencias = {}) {
   return modulo.exports;
 }
 const validacao = carregar("app/lib/importacao-produtos.ts");
+const categorias = carregar("app/lib/categorias-importacao.ts");
+const revisao = carregar("app/lib/revisao-categorias.ts", { './categorias-importacao': categorias });
+const planilha = carregar("app/lib/planilha-produtos.ts", { './importacao-produtos': validacao, './categorias-importacao': categorias });
+const imagensRemotas = carregar("app/lib/imagem-importacao.ts", { './importacao-produtos': validacao });
 const cabecalho = "nome,slug,categoria,preco,descricao,estoque,ativo,imagem\n";
 const linha = (slug = "creatina", imagem = "creatina.webp") => `Creatina,${slug},Suplementos,89.90,Descrição,15,true,${imagem}`;
 const imagem = { name: "creatina.webp", type: "image/webp", size: 24 };
@@ -25,7 +30,7 @@ test("CSV aceita BOM, CRLF, aspas escapadas, vírgulas e descrição multilinha"
   assert.deepEqual(validacao.validarLinhas(linhas, [imagem], new Set()).map(l => l.erros), [[], []]);
 });
 test("CSV rejeita cabeçalho inválido, aspas abertas, vazio e excesso de linhas", () => {
-  for (const csv of ["nome,slug\nA,a", cabecalho + '"aberto', cabecalho, cabecalho + Array(201).fill(linha()).join('\n')]) assert.throws(() => validacao.lerCSV(csv));
+  for (const csv of ["nome,slug\nA,a", cabecalho + '"aberto', cabecalho, cabecalho + Array(1001).fill(linha()).join('\n')]) assert.throws(() => validacao.lerCSV(csv));
 });
 test("valida obrigatórios, preço, estoque, ativo, duplicidade e imagens", () => {
   const linhas = validacao.lerCSV(cabecalho + ',duplicado,,NaN,,1.5,talvez,ausente.png\n' + linha('duplicado'));
@@ -66,11 +71,15 @@ function ambiente(opcoes = {}) {
     from: tabela => {
       assert.equal(tabela, 'products');
       return {
-        select: campo => ({ in: async () => {
+        select: campo => {
+          const consulta = { order: () => consulta, range: async () => {
+            eventos.push('select:nome,slug');
+            return { data: (opcoes.existentes ?? []).map(slug => ({ slug, nome: slug })), error: null };
+          }, in: async () => {
           eventos.push(`select:${campo}`);
           if (campo === 'slug') return { data: (opcoes.existentes ?? []).map(slug => ({ slug })), error: null };
           return { data: opcoes.confirmado ? inseridos.map(p => ({ id: p.id })) : [], error: opcoes.falhaConfirmacao ? new Error('offline') : null };
-        } }),
+        } }; return consulta; },
         insert: async produtos => { eventos.push('insert'); inseridos.push(...produtos); return { error: opcoes.falhaInsert ? new Error('insert') : null }; },
       };
     },
@@ -81,13 +90,17 @@ function ambiente(opcoes = {}) {
       eventos.push('auth'); if (opcoes.negado || token !== 'Bearer admin') throw new Error('denied');
     } },
     '../../../../lib/importacao-produtos': validacao,
+    '../../../../lib/planilha-produtos': planilha,
+    '../../../../lib/revisao-categorias': revisao,
+    '../../../../lib/imagem-importacao': { ...imagensRemotas, baixarImagem: async () => { eventos.push('download'); if (opcoes.falhaDownload) throw new Error('404'); return imagensRemotas.validarConteudo(Buffer.from('RIFF0000WEBP000000000000')); } },
   };
   Object.defineProperty(dependencias, '../../../../lib/supabase-admin', { get() { acessoSupabase++; return { supabaseAdmin }; } });
   const { POST } = carregar('app/api/admin/produtos/importar/route.ts', dependencias);
-  async function executar({ csv = cabecalho + linha(), acao = 'importar', arquivos = ['creatina.webp'], invalido = false } = {}) {
+  async function executar({ csv = cabecalho + linha(), acao = 'importar', arquivos = ['creatina.webp'], invalido = false, categorias = [] } = {}) {
     const form = new FormData();
     form.append('csv', new File([csv], 'produtos.csv'));
     form.append('acao', acao);
+    form.append('categorias', JSON.stringify(categorias));
     form.append('manifesto', JSON.stringify(arquivos.map(name => ({ ...imagem, name }))));
     for (const nome of arquivos) form.append('imagens', new File([invalido ? 'invalido' : 'RIFF0000WEBP000000000000'], nome, { type: 'image/webp' }));
     const resposta = await POST(new Request('http://localhost/api/admin/produtos/importar', { method: 'POST', headers: { Authorization: 'Bearer admin' }, body: form }));
@@ -104,8 +117,8 @@ test("API rejeita acesso não admin antes de usar Supabase", async () => {
 test("prévia consulta slugs sem upload ou insert", async () => {
   const app = ambiente({ existentes: ['creatina'] });
   const { dados } = await app.executar({ acao: 'validar' });
-  assert.ok(dados.linhas[0].erros.includes('Produto já existente'));
-  assert.deepEqual(app.eventos, ['auth', 'select:slug']);
+  assert.ok(dados.linhas[0].erros.includes('Possível produto já existente'));
+  assert.deepEqual(app.eventos, ['auth', 'select:nome,slug']);
 });
 test("importa somente válidos, gera UUID e mantém criado_em no default", async () => {
   const app = ambiente();
@@ -133,7 +146,7 @@ test("falha de upload ou conteúdo inválido não cadastra URL inválida", async
 });
 test("falha do insert remove todas as imagens recém enviadas", async () => {
   const app = ambiente({ falhaInsert: true });
-  const { dados } = await app.executar({ csv: cabecalho + linha() + '\n' + linha('whey', 'whey.webp'), arquivos: ['creatina.webp', 'whey.webp'] });
+  const { dados } = await app.executar({ csv: cabecalho + linha() + '\n' + linha('whey', 'whey.webp').replace('Creatina,', 'Whey,'), arquivos: ['creatina.webp', 'whey.webp'] });
   assert.equal(dados.importados, 0); assert.equal(dados.erros, 2); assert.equal(app.removidos.length, 2);
 });
 test("resposta perdida de insert confirmado preserva imagens cadastradas", async () => {
@@ -148,4 +161,134 @@ test("falha de confirmação ou limpeza é apresentada, sem ocultar pendências"
   const limpeza = ambiente({ falhaInsert: true, falhaLimpeza: true });
   const resposta = await limpeza.executar();
   assert.equal(resposta.dados.avisos.length, 1); assert.equal(limpeza.removidos.length, 3);
+});
+
+const XLSX = require('xlsx');
+test('planilha real XLS identifica cabe?alho e mapeamento sem alterar original', () => {
+  const buffer = readFileSync(new URL('../produtos_2026-10-08-1.xls', import.meta.url));
+  const resultado = planilha.analisarPlanilha(buffer);
+  assert.equal(resultado.linhas.length, 656);
+  assert.equal(resultado.relatorio.mapeamento.nome, 'Produto');
+  assert.equal(resultado.relatorio.mapeamento.preco, 'Preço');
+  assert.equal(resultado.relatorio.mapeamento.estoque, null);
+  assert.equal(resultado.relatorio.mapeamento.imagem, 'URL imagem 1');
+  assert.equal(resultado.linhas[0].produto.preco, '14.9');
+  assert.equal(resultado.linhas[0].produto.estoque, '0');
+});
+test('XLS e XLSX, pre?mbulo, categoria padrão e status', () => {
+  for (const bookType of ['xls', 'xlsx']) {
+    const w = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(w, XLSX.utils.aoa_to_sheet([['Exporta??o'],['Produto','Preço','Situação'],['CHÁ VERDE + HIBISCO 100G','R$ 1.249,90','Inativo']]), 'Produtos');
+    const r = planilha.analisarPlanilha(XLSX.write(w, {type:'buffer',bookType}), 'Chás');
+    assert.equal(r.relatorio.linhaCabecalho, 2);
+    assert.equal(r.linhas[0].produto.slug, 'cha-verde-hibisco-100g');
+    assert.equal(r.linhas[0].produto.preco, '1249.9');
+    assert.equal(validacao.valorAtivo(r.linhas[0].produto.ativo), false);
+    assert.equal(planilha.validarProdutos(r.linhas, [], [])[0].erros.length, 0);
+  }
+});
+test('pre?os brasileiros e internacionais n?o perdem casas decimais', () => {
+  for (const [s,n] of [['1,49',1.49],['14,90',14.9],['129.90',129.9],['R$ 14,90',14.9],['1.249,90',1249.9],['1249.90',1249.9]]) assert.equal(planilha.parsePreco(s),n);
+  for (const s of ['NaN','-1','1e3','0x10','texto','1.2.3']) assert.equal(planilha.parsePreco(s),undefined);
+});
+test('CSV brasileiro usa separador ponto e v?rgula e gera slug', () => {
+ const r = planilha.analisarPlanilha(Buffer.from('Produto;Preço;Estoque;Categoria\nChá;14,90;15;Chás'));
+ assert.equal(r.linhas[0].produto.preco, '14.9');
+ assert.equal(r.linhas[0].produto.slug, 'cha');
+});
+test('colis?es distintas recebem sufixo, nomes repetidos s?o ignorados', () => {
+ const r = planilha.analisarPlanilha(Buffer.from('nome,preco,categoria\nChá verde,14.90,Chás\nCha-verde,10,Chás\nCHÁ VERDE,10,Chás'));
+ const v = planilha.validarProdutos(r.linhas, [], []);
+ assert.equal(v[1].produto.slug, 'cha-verde-2');
+ assert.ok(v[2].erros.some(e => e.includes('duplicado')));
+ assert.equal(planilha.validarProdutos(r.linhas, [], [{nome:'CHÁ VERDE',slug:'outro'}])[0].existente,true);
+});
+test('bloqueia IPs privados, metadata, loopback e IPv6 mapeado', () => {
+ for (const ip of ['127.0.0.1','0.0.0.0','10.1.1.1','172.16.0.1','192.168.1.1','169.254.169.254','::1','::ffff:127.0.0.1','fc00::1','fe80::1']) assert.equal(imagensRemotas.enderecoPublico(ip),false,ip);
+ assert.equal(imagensRemotas.enderecoPublico('8.8.8.8'),true);
+});
+test('rejeita conte?do falso, MIME divergente e imagem acima do limite', () => {
+ assert.throws(() => imagensRemotas.validarConteudo(Buffer.from('texto'),'image/png'));
+ assert.throws(() => imagensRemotas.validarConteudo(Buffer.from('RIFF0000WEBP'),'image/png'));
+ const grande = Buffer.alloc(validacao.LIMITE_IMAGEM+1); grande.write('RIFF'); grande.write('WEBP',8);
+ assert.throws(() => imagensRemotas.validarConteudo(grande));
+});
+test('download remoto reutiliza URL, grava URL pr?pria e n?o persiste SKU', async () => {
+ const app=ambiente(); const csv=cabecalho+linha('creatina','https://erp.test/a.webp')+'\nWhey,whey,Suplementos,10,,0,true,https://erp.test/a.webp';
+ const {dados}=await app.executar({csv,arquivos:[]});
+ assert.equal(dados.importados,2);assert.equal(app.eventos.filter(e=>e==='download').length,1);assert.equal(app.eventos.filter(e=>e==='upload').length,1);
+ assert.ok(app.inseridos.every(p=>p.imagem.startsWith('https://storage.test/')));assert.equal('sku' in app.inseridos[0],false);
+});
+test('URL quebrada n?o insere produto nem URL externa', async () => {
+ const app=ambiente({falhaDownload:true});const {dados}=await app.executar({csv:cabecalho+linha('creatina','https://erp.test/a.webp'),arquivos:[]});
+ assert.equal(dados.erros,1);assert.equal(app.inseridos.length,0);assert.match(dados.detalhes[0].mensagem,/Falha ao importar imagem/);
+});
+test('concorr?ncia de download limitada a quatro', async () => {
+ let ativas=0,maximo=0;
+ await imagensRemotas.concorrenciaLimitada(Array.from({length:20}),async()=>{maximo=Math.max(maximo,++ativas);await new Promise(r=>setTimeout(r,5));ativas--;});
+ assert.equal(maximo,4);
+});
+
+test('download valida HTTP, MIME, tamanho, redirect e fixa DNS público', async () => {
+  async function executar(respostas, dns = ['8.8.8.8']) {
+    let conexoes = 0;
+    const request = (_url, options, receber) => {
+      conexoes++;
+      options.lookup('erp.test', { all: true }, (erro, enderecos) => {
+        assert.equal(erro, null); assert.equal(enderecos[0].address, '8.8.8.8');
+      });
+      const req = new EventEmitter();
+      req.destroy = e => { req.emit('error', e); req.emit('close'); };
+      req.end = () => queueMicrotask(() => {
+        const resposta = respostas.shift();
+        const res = new EventEmitter();
+        Object.assign(res, { statusCode: resposta.status ?? 200, headers: resposta.headers ?? { 'content-type': 'image/webp' }, resume() {}, destroy(e) { if (e) queueMicrotask(() => res.emit('error', e)); req.emit('close'); } });
+        receber(res);
+        if (!resposta.headers?.location) { res.emit('data', resposta.buffer ?? Buffer.from('RIFF0000WEBP0000')); res.emit('end'); }
+        req.emit('close');
+      });
+      return req;
+    };
+    const lib = carregar('app/lib/imagem-importacao.ts', {
+      './importacao-produtos': validacao,
+      'node:dns/promises': { lookup: async () => dns.map(address => ({address,family:4})) },
+      'node:http': { request }, 'node:https': { request },
+    });
+    return { promise: lib.baixarImagem('https://erp.test/a.webp'), conexoes: () => conexoes };
+  }
+  assert.equal((await (await executar([{}])).promise).tipo, 'image/webp');
+  for (const resposta of [{status:404}, {headers:{'content-type':'text/html'}}, {headers:{'content-type':'image/webp','content-length':String(validacao.LIMITE_IMAGEM+1)}}, {buffer:Buffer.alloc(validacao.LIMITE_IMAGEM+1)}]) {
+    await assert.rejects((await executar([resposta])).promise);
+  }
+  const privado = await executar([{}], ['10.0.0.1']); await assert.rejects(privado.promise); assert.equal(privado.conexoes(),0);
+  await assert.rejects((await executar([{status:302,headers:{location:'file:///secret'}}])).promise);
+  assert.equal((await (await executar([{status:302,headers:{location:'/final.webp'}}, {}])).promise).tipo,'image/webp');
+});
+
+test('planilha real tem 655 URLs HTTP e duas pendências sem categoria padrão', () => {
+  const r = planilha.analisarPlanilha(readFileSync(new URL('../produtos_2026-10-08-1.xls', import.meta.url)));
+  const v = planilha.validarProdutos(r.linhas, [], []);
+  assert.equal(r.relatorio.urls,655);
+  assert.equal(v.filter(l => !l.erros.length).length,654);
+  assert.deepEqual(v.filter(l => l.erros.length).map(l => l.linha),[258,593]);
+});
+
+test('API grava categoria final corrigida e mantém sugestão apenas no preview', async () => {
+  const app = ambiente();
+  const preview = await app.executar({acao:'validar', categorias:[{linha:2,categoria:'Snacks'}]});
+  assert.equal(preview.dados.linhas[0].produto.categoria,'Snacks');
+  assert.equal(preview.dados.linhas[0].classificacao.categoria,'Suplementos');
+  const resultado = await app.executar({categorias:[{linha:2,categoria:'Snacks'}]});
+  assert.equal(resultado.dados.importados,1); assert.equal(app.inseridos[0].categoria,'Snacks');
+  assert.equal('classificacao' in app.inseridos[0],false);
+});
+test('API não grava categoria não oficial nem produto incerto sem revisão', async () => {
+  const forjada = ambiente();
+  assert.equal((await forjada.executar({categorias:[{linha:2,categoria:'Outros'}]})).status,400);
+  assert.equal(forjada.inseridos.length,0);
+  const incerta=ambiente();
+  const csv=cabecalho+linha().replace('Creatina,','Produto desconhecido,').replace('Suplementos,','GRANEL,');
+  const r=await incerta.executar({csv}); assert.equal(r.dados.importados,0);assert.equal(r.dados.ignorados,1);
+  const corrigida=await incerta.executar({csv,categorias:[{linha:2,categoria:'Mercearia'}]});
+  assert.equal(corrigida.dados.importados,1);assert.equal(incerta.inseridos[0].categoria,'Mercearia');
 });

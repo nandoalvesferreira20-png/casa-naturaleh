@@ -14,6 +14,7 @@ import {
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { db } from "../lib/firebase";
+import { DELIVERY_FEE, STORE_ADDRESS, type FulfillmentType } from "../lib/delivery/types";
 
 type Endereco = {
   cep?: string;
@@ -60,7 +61,8 @@ export default function CheckoutPage() {
   const [carregandoPerfil, setCarregandoPerfil] = useState(false);
 
   // Pagamento
-  const [pagamento, setPagamento] = useState("");
+  const [pagamento, setPagamento] = useState<"pix" | "local">("pix");
+  const [fulfillmentType, setFulfillmentType] = useState<FulfillmentType>("pickup");
 
   // Finalização
   const [finalizando, setFinalizando] = useState(false);
@@ -68,7 +70,7 @@ export default function CheckoutPage() {
   const [erroFinalizacao, setErroFinalizacao] = useState("");
 
   // Valores de exibição; o pedido é recalculado exclusivamente pela API.
-  const frete = 0;
+  const frete = fulfillmentType === "delivery" ? DELIVERY_FEE : 0;
   const total = subtotal + frete;
 
   useEffect(() => {
@@ -308,52 +310,55 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (!cep.trim()) {
-      setErroFinalizacao(
-        "Informe o CEP."
-      );
+    if (fulfillmentType === "delivery") {
+      if (!/^\d{5}-?\d{3}$/.test(cep.trim())) {
+        setErroFinalizacao(
+          "Informe um CEP válido."
+        );
 
-      return;
-    }
+        return;
+      }
 
-    if (!rua.trim()) {
-      setErroFinalizacao(
-        "Informe a rua."
-      );
+      if (!rua.trim()) {
+        setErroFinalizacao(
+          "Informe a rua."
+        );
 
-      return;
-    }
+        return;
+      }
 
-    if (!numero.trim()) {
-      setErroFinalizacao(
-        "Informe o número."
-      );
+      if (!numero.trim()) {
+        setErroFinalizacao(
+          "Informe o número."
+        );
 
-      return;
-    }
+        return;
+      }
 
-    if (!bairro.trim()) {
-      setErroFinalizacao(
-        "Informe o bairro."
-      );
+      if (!bairro.trim()) {
+        setErroFinalizacao(
+          "Informe o bairro."
+        );
 
-      return;
-    }
+        return;
+      }
 
-    if (!cidade.trim()) {
-      setErroFinalizacao(
-        "Informe a cidade."
-      );
+      if (!cidade.trim()) {
+        setErroFinalizacao(
+          "Informe a cidade."
+        );
 
-      return;
-    }
+        return;
+      }
 
-    if (!estado.trim()) {
-      setErroFinalizacao(
-        "Informe o estado."
-      );
+      if (!estado.trim()) {
+        setErroFinalizacao(
+          "Informe o estado."
+        );
 
-      return;
+        return;
+      }
+
     }
 
     if (!pagamento) {
@@ -376,7 +381,8 @@ export default function CheckoutPage() {
           telefone: telefone.trim(),
         },
 
-        endereco: {
+        fulfillmentType,
+        endereco: fulfillmentType === "delivery" ? {
           cep: cep.trim(),
           rua: rua.trim(),
           numero: numero.trim(),
@@ -386,7 +392,7 @@ export default function CheckoutPage() {
           cidade: cidade.trim(),
           estado:
             estado.trim().toUpperCase(),
-        },
+        } : null,
 
         itens: itens.map(({ id, quantidade }) => ({ id, quantidade })),
         pagamento,
@@ -540,14 +546,28 @@ export default function CheckoutPage() {
             <section className="rounded-[1.5rem] bg-white p-6 md:p-8">
               <div className="mb-6">
                 <span className="text-sm font-medium uppercase tracking-[0.2em] text-[var(--color-primary)]">
-                  2. Entrega
+                  2. Recebimento
                 </span>
 
                 <h2 className="mt-2 text-2xl font-semibold">
-                  Endereço
+                  Forma de recebimento
                 </h2>
               </div>
 
+              <fieldset className="mb-6 space-y-3" disabled={finalizando}>
+                <legend className="sr-only">Forma de recebimento</legend>
+                {(["pickup", "delivery"] as const).map(type => <label key={type} className="flex cursor-pointer items-center gap-3 rounded-2xl border border-[var(--color-bg-soft)] p-4">
+                  <input type="radio" name="fulfillmentType" value={type} checked={fulfillmentType === type} onChange={() => {
+                    setFulfillmentType(type);
+                    if (type === "delivery") setPagamento("pix");
+                    setErroFinalizacao("");
+                  }} />
+                  {type === "pickup" ? "Retirada na loja — Grátis" : "Entrega — R$ 15,00"}
+                </label>)}
+              </fieldset>
+              {fulfillmentType === "pickup" ? <p className="text-sm leading-6">Retirada em: {STORE_ADDRESS}</p> : <>
+              <p className="mb-5 text-sm text-[var(--color-text-light)]">Entrega em até 15 km em linha reta da loja. O endereço será validado ao finalizar o pedido.</p>
+              <p className="mb-5 text-xs text-[var(--color-text-light)]">Geocodificação por <a href="https://www.geoapify.com/" target="_blank" rel="noopener noreferrer" className="underline">Geoapify</a>. Dados © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" className="underline">OpenStreetMap contributors</a>.</p>
               <div className="grid gap-5 sm:grid-cols-2">
                 {/* CEP */}
                 <div>
@@ -741,6 +761,7 @@ export default function CheckoutPage() {
                   {erroCep}
                 </p>
               )}
+              </>}
             </section>
 
             {/* Pagamento */}
@@ -751,7 +772,7 @@ export default function CheckoutPage() {
                 </span>
 
                 <h2 className="mt-2 text-2xl font-semibold">
-                  Como deseja pagar?
+                  Forma de pagamento
                 </h2>
               </div>
 
@@ -771,11 +792,8 @@ export default function CheckoutPage() {
                     checked={
                       pagamento === "pix"
                     }
-                    onChange={(event) =>
-                      setPagamento(
-                        event.target.value
-                      )
-                    }
+                    onChange={() => setPagamento("pix")}
+                    disabled={finalizando}
                   />
 
                   <div>
@@ -784,78 +802,14 @@ export default function CheckoutPage() {
                     </p>
 
                     <p className="mt-1 text-sm text-[var(--color-text-light)]">
-                      Pagamento rápido e confirmação automática.
+                      Você verá o QR Code após finalizar o pedido.
                     </p>
                   </div>
                 </label>
-
-                {/* Cartão */}
-                <label
-                  className={`flex cursor-pointer items-center gap-4 rounded-2xl border p-4 transition ${
-                    pagamento === "cartao"
-                      ? "border-[var(--color-primary)] bg-[var(--color-bg-soft)]"
-                      : "border-black/10 hover:border-[var(--color-primary)]"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="pagamento"
-                    value="cartao"
-                    checked={
-                      pagamento ===
-                      "cartao"
-                    }
-                    onChange={(event) =>
-                      setPagamento(
-                        event.target.value
-                      )
-                    }
-                  />
-
-                  <div>
-                    <p className="font-semibold">
-                      Cartão de crédito
-                    </p>
-
-                    <p className="mt-1 text-sm text-[var(--color-text-light)]">
-                      Pagamento com cartão.
-                    </p>
-                  </div>
-                </label>
-
-                {/* Boleto */}
-                <label
-                  className={`flex cursor-pointer items-center gap-4 rounded-2xl border p-4 transition ${
-                    pagamento === "boleto"
-                      ? "border-[var(--color-primary)] bg-[var(--color-bg-soft)]"
-                      : "border-black/10 hover:border-[var(--color-primary)]"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="pagamento"
-                    value="boleto"
-                    checked={
-                      pagamento ===
-                      "boleto"
-                    }
-                    onChange={(event) =>
-                      setPagamento(
-                        event.target.value
-                      )
-                    }
-                  />
-
-                  <div>
-                    <p className="font-semibold">
-                      Boleto
-                    </p>
-
-                    <p className="mt-1 text-sm text-[var(--color-text-light)]">
-                      Gere o boleto e efetue o pagamento.
-                    </p>
-                  </div>
-                </label>
+                {fulfillmentType === "pickup" && <label className={`flex cursor-pointer items-center gap-4 rounded-2xl border p-4 ${pagamento === "local" ? "border-[var(--color-primary)] bg-[var(--color-bg-soft)]" : "border-black/10"}`}>
+                  <input type="radio" name="pagamento" value="local" checked={pagamento === "local"} onChange={() => setPagamento("local")} disabled={finalizando} />
+                  <div><p className="font-semibold">Pagamento no local</p><p className="mt-1 text-sm text-[var(--color-text-light)]">Você poderá realizar o pagamento ao retirar seu pedido na loja.</p></div>
+                </label>}
               </div>
             </section>
           </div>
@@ -938,7 +892,7 @@ export default function CheckoutPage() {
                 </span>
 
                 <span className="text-sm font-medium">
-                  A calcular
+                  {frete === 0 ? "Grátis" : frete.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
                 </span>
               </div>
 

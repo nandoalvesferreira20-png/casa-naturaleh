@@ -178,7 +178,8 @@ test("API autentica antes de ler payload, rejeita token expirado e não expõe c
     "next/server": { NextResponse: { json: (data, init) => Response.json(data, init) } },
     "../firebase-admin": { adminAuth: { verifyIdToken: async (token, checkRevoked) => { assert.equal(checkRevoked, true); if (token !== "valid") throw new Error("SECRET"); return { uid: "owner" }; } } },
   }, true);
-  const f = fixture(); const route = load("app/api/payments/route.ts", { "../../lib/payments": { paymentService: f.service }, "../../lib/payments/http": http }, true);
+  // Testa o código futuro preservado; a rota V1 pausada é coberta separadamente.
+  const f = fixture(); const route = load("app/api/payments/route.ts", { "../../lib/payments": { paymentService: f.service }, "../../lib/payments/http": http, "../../lib/payments/availability": { GATEWAY_PAYMENTS_ENABLED: true } }, true);
   for (const authorization of ["", "Bearer expired"]) {
     const response = await route.POST(new Request("http://localhost/api/payments", { method: "POST", headers: { authorization }, body: "broken" }));
     assert.equal(response.status, 401); assert.equal((await response.text()).includes("SECRET"), false);

@@ -16,14 +16,16 @@ import {
 import ProtectedRoute from "../components/ProtectedRoute";
 import { useAuth } from "../context/AuthContext";
 import { db } from "../lib/firebase";
-import { paymentLabels, type PaymentRecord } from "../lib/payments/types";
+import { orderPaymentLabel, type OrderPayment } from "../lib/pix/types";
+import type { Fulfillment } from "../lib/delivery/types";
 
 type Pedido = {
   id: string;
   userId: string;
   total: number;
   status: string;
-  payment?: PaymentRecord;
+  payment?: OrderPayment;
+  fulfillment?: Fulfillment;
   criadoEm?: Timestamp;
 
   itens: {
@@ -313,7 +315,8 @@ export default function MeusPedidosPage() {
                                   pedido.criadoEm
                                 )}
                               </p>
-                              {pedido.payment && <p className="mt-2 text-sm text-[var(--color-text-light)]">Pagamento: {paymentLabels[pedido.payment.status] ?? nomeStatus(pedido.status)}</p>}
+                              {pedido.payment && <p className="mt-2 text-sm text-[var(--color-text-light)]">Pagamento: {orderPaymentLabel(pedido.payment, pedido.status)}</p>}
+                              {pedido.fulfillment && <p className="mt-2 text-sm text-[var(--color-text-light)]">Recebimento: {pedido.fulfillment.type === "pickup" ? "Retirada na loja" : "Entrega"}</p>}
                             </div>
 
                             <div className="flex flex-wrap items-center gap-8">

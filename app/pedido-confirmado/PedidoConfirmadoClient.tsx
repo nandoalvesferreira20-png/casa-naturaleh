@@ -10,10 +10,11 @@ import {
 } from "firebase/firestore";
 
 import { db } from "../lib/firebase";
+import { STORE_ADDRESS, addressText, type DeliveryAddress, type Fulfillment } from "../lib/delivery/types";
 import { useAuth } from "../context/AuthContext";
 import ProtectedRoute from "../components/ProtectedRoute";
-import PaymentPanel from "../components/payments/PaymentPanel";
-import type { PaymentRecord } from "../lib/payments/types";
+import ManualPixPanel from "../components/payments/ManualPixPanel";
+import { orderPaymentLabel, type OrderPayment } from "../lib/pix/types";
 
 type Pedido = {
   userId: string;
@@ -24,15 +25,8 @@ type Pedido = {
     telefone: string;
   };
 
-  endereco: {
-    cep: string;
-    rua: string;
-    numero: string;
-    complemento?: string;
-    bairro: string;
-    cidade: string;
-    estado: string;
-  };
+  endereco?: DeliveryAddress | null;
+  fulfillment?: Fulfillment;
 
   itens: {
     id: string;
@@ -49,8 +43,54 @@ type Pedido = {
 
   pagamento: string;
   status: string;
-  payment?: PaymentRecord;
+  payment?: OrderPayment;
 };
+
+export function ComprovanteWhatsApp({ pedidoId, pedido }: { pedidoId: string | null; pedido: Pedido }) {
+  if (!pedidoId || !pedido.payment || !["pix_manual", "manual"].includes(pedido.payment.provider) ||
+    pedido.payment.status !== "pending" || pedido.status !== "aguardando_pagamento") return null;
+
+  const local = pedido.payment.provider === "manual" && pedido.fulfillment?.type === "pickup";
+  if (pedido.payment.provider === "manual" && !local) return null;
+  const txid = pedido.payment.provider === "pix_manual" ? pedido.payment.txid : "";
+  const moeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+  const mensagem = [
+    local ? "Olá! Acabei de realizar um pedido na Casa Naturaleh para retirada. Vou realizar o pagamento no local." : "Olá! Acabei de realizar um pedido na Casa Naturaleh e efetuei o pagamento via Pix.",
+    "",
+    `Pedido: #${pedidoId}`,
+    `Nome: ${pedido.cliente.nome}`,
+    ...(pedido.fulfillment ? [
+      `Forma de recebimento: ${pedido.fulfillment.type === "pickup" ? "Retirada na loja" : "Entrega"}`,
+      pedido.fulfillment.type === "pickup" ? `Retirada em: ${STORE_ADDRESS}` : `Endereço: ${addressText(pedido.endereco)}`,
+      `Frete: ${moeda.format(pedido.frete)}`,
+    ] : []),
+    `Forma de pagamento: ${local ? "Pagamento no local" : "Pix"}`,
+    "",
+    "Itens:",
+    ...pedido.itens.map(item => `- ${item.quantidade}x ${item.nome} — ${moeda.format(item.preco)} por unidade`),
+    "",
+    `Total: ${moeda.format(pedido.total)}`,
+    ...(txid ? ["", `TXID Pix: ${txid}`] : []),
+    "",
+    local ? "Gostaria de combinar a retirada do meu pedido." : "Estou enviando o comprovante para confirmação do pagamento.",
+    "",
+    "Obrigado!",
+  ].join("\n");
+
+  return <section className="rounded-[1.5rem] bg-white p-6 md:p-8">
+    <p className="text-sm leading-6 text-[var(--color-text-light)]">
+      {local ? "Fale com a loja para combinar a retirada. O pagamento será realizado no local." : "Após realizar o Pix, envie o comprovante pelo WhatsApp para agilizar a confirmação do seu pedido. O pagamento será conferido pela loja antes da aprovação. Anexe o comprovante na conversa."}
+    </p>
+    <a
+      href={`https://wa.me/5511999572975?text=${encodeURIComponent(mensagem)}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="mt-4 inline-flex w-full justify-center rounded-full bg-[var(--color-primary)] px-6 py-4 text-center text-sm font-semibold text-white transition hover:opacity-90 sm:w-auto"
+    >
+      {local ? "Combinar retirada no WhatsApp" : "Já paguei — enviar comprovante no WhatsApp"}
+    </a>
+  </section>;
+}
 
 export default function PedidoConfirmadoClient() {
   const searchParams = useSearchParams();
@@ -127,6 +167,9 @@ export default function PedidoConfirmadoClient() {
     pagamento: string
   ) {
     switch (pagamento) {
+      case "local":
+        return "Pagamento na retirada";
+
       case "pix":
         return "Pix";
 
@@ -182,7 +225,7 @@ export default function PedidoConfirmadoClient() {
                   </span>
 
                   <h1 className="mt-3 text-4xl font-semibold md:text-5xl">
-                    Pedido criado
+                    Pedido realizado com sucesso
                   </h1>
 
                   <p className="mx-auto mt-4 max-w-xl leading-7 text-[var(--color-text-light)]">
@@ -267,7 +310,7 @@ export default function PedidoConfirmadoClient() {
                       </span>
 
                       <span>
-                        {pedido.frete.toLocaleString(
+                        {pedido.frete === 0 ? "Grátis" : pedido.frete.toLocaleString(
                           "pt-BR",
                           {
                             style:
@@ -313,53 +356,24 @@ export default function PedidoConfirmadoClient() {
                     </h2>
 
                     <p className="mt-2 text-sm text-[var(--color-text-light)]">
-                      {pedido.payment ? "Acompanhe a confirmação na seção de pagamento abaixo." : `Status: ${pedido.status.replaceAll("_", " ")}`}
+                      {orderPaymentLabel(pedido.payment, pedido.status)}
                     </p>
                   </div>
 
                   <div className="rounded-[1.5rem] bg-white p-6">
                     <span className="text-xs font-medium uppercase tracking-[0.2em] text-[var(--color-primary)]">
-                      Entrega
+                      Recebimento
                     </span>
 
-                    <p className="mt-3 font-semibold">
-                      {
-                        pedido.endereco
-                          .rua
-                      }
-                      ,{" "}
-                      {
-                        pedido.endereco
-                          .numero
-                      }
-                    </p>
-
-                    <p className="mt-2 text-sm leading-6 text-[var(--color-text-light)]">
-                      {
-                        pedido.endereco
-                          .bairro
-                      }
-                      <br />
-                      {
-                        pedido.endereco
-                          .cidade
-                      }{" "}
-                      -{" "}
-                      {
-                        pedido.endereco
-                          .estado
-                      }
-                      <br />
-                      CEP{" "}
-                      {
-                        pedido.endereco
-                          .cep
-                      }
-                    </p>
+                    <p className="mt-3 font-semibold">{pedido.fulfillment?.type === "pickup" ? "Retirada na loja" : "Entrega"}</p>
+                    <p className="mt-2 text-sm leading-6 text-[var(--color-text-light)]">{pedido.fulfillment?.type === "pickup" ? STORE_ADDRESS : addressText(pedido.endereco)}</p>
                   </div>
                 </section>
 
-                {pedido.payment && pedidoId && <PaymentPanel orderId={pedidoId} />}
+                {pedido.payment?.provider === "pix_manual" && pedidoId && <ManualPixPanel orderId={pedidoId} total={pedido.total} orderStatus={pedido.status} payment={pedido.payment} />}
+                {pedido.payment?.provider === "manual" && pedido.payment.status === "pending" && pedido.status === "aguardando_pagamento" && <section className="rounded-[1.5rem] bg-white p-6 md:p-8"><h2 className="text-2xl font-semibold">Pagamento na retirada</h2><p className="mt-3 text-sm">Você poderá realizar o pagamento ao retirar seu pedido na loja.</p></section>}
+                <ComprovanteWhatsApp pedidoId={pedidoId} pedido={pedido} />
+                {pedido.payment && pedido.payment.provider !== "pix_manual" && pedido.payment.provider !== "manual" && pedido.status === "aguardando_pagamento" && <p className="text-sm text-[var(--color-text-light)]">Este pedido foi criado com a integração de pagamento anterior. Entre em contato com a loja para conferir o pagamento.</p>}
 
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <Link

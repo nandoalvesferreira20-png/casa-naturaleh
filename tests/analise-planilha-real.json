@@ -1,0 +1,52 @@
+{
+  "relatorio": {
+    "aba": "Produtos",
+    "linhaCabecalho": 1,
+    "colunas": [
+      "ID",
+      "Código (SKU)",
+      "Produto",
+      "Unidade",
+      "Preço",
+      "GTIN/EAN",
+      "URL imagem 1",
+      "Categoria",
+      "Sub-Categoria",
+      "Marca"
+    ],
+    "mapeamento": {
+      "nome": "Produto",
+      "slug": null,
+      "categoria": "Categoria",
+      "preco": "Preço",
+      "descricao": null,
+      "estoque": null,
+      "ativo": null,
+      "sku": "Código (SKU)",
+      "imagem": "URL imagem 1"
+    },
+    "total": 656,
+    "urls": 655
+  },
+  "validos": 654,
+  "problemas": [
+    {
+      "linha": 258,
+      "nome": "DESINCHA MORO CAIXA COM 30 SACHES",
+      "preco": "59.9",
+      "erros": [
+        "Selecione uma categoria padrão ou informe categoria na planilha"
+      ]
+    },
+    {
+      "linha": 593,
+      "nome": "TEMPERO PARRILLA BLACK POTE 130G",
+      "preco": "14.9",
+      "erros": [
+        "URL de imagem inválida"
+      ]
+    }
+  ],
+  "semImagem": 0,
+  "urlsUnicas": 653
+}

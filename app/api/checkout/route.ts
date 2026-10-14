@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { adminAuth, adminDb } from "../../lib/firebase-admin";
-import { initialPayment } from "../../lib/payments/service";
-import { configuredProviderName } from "../../lib/payments/provider";
-import type { PaymentMethod } from "../../lib/payments/types";
+import { createManualPixPayment, PixConfigurationError } from "../../lib/pix/pix";
+import { validateDelivery } from "../../lib/delivery/service";
+import { DeliveryError, type DeliveryAddress, type Fulfillment } from "../../lib/delivery/types";
 
 export const runtime = "nodejs";
 
@@ -30,24 +30,30 @@ function texto(dados: Record<string, unknown>, campo: string, rotulo: string, op
 function validarBody(body: unknown) {
   const dados = objeto(body);
   const cliente = objeto(dados.cliente);
-  const endereco = objeto(dados.endereco);
+  if (dados.fulfillmentType !== "delivery" && dados.fulfillmentType !== "pickup") throw new ErroCheckout("Escolha entrega ou retirada na loja.");
   const clienteValidado = {
     nome: texto(cliente, "nome", "o nome"),
     email: texto(cliente, "email", "o e-mail"),
     telefone: texto(cliente, "telefone", "o telefone"),
   };
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clienteValidado.email)) throw new ErroCheckout("Informe um e-mail válido.");
-  const enderecoValidado = {
-    cep: texto(endereco, "cep", "o CEP"),
-    rua: texto(endereco, "rua", "a rua"),
-    numero: texto(endereco, "numero", "o número"),
-    complemento: texto(endereco, "complemento", "o complemento", true),
-    bairro: texto(endereco, "bairro", "o bairro"),
-    cidade: texto(endereco, "cidade", "a cidade"),
-    estado: texto(endereco, "estado", "o estado").toUpperCase(),
-  };
-  if (typeof dados.pagamento !== "string" || !["pix", "cartao", "boleto"].includes(dados.pagamento)) {
-    throw new ErroCheckout("Escolha uma forma de pagamento válida: pix, cartao ou boleto.");
+  let enderecoValidado: DeliveryAddress | null = null;
+  if (dados.fulfillmentType === "delivery") {
+    const endereco = objeto(dados.endereco);
+    enderecoValidado = {
+      cep: texto(endereco, "cep", "o CEP"),
+      rua: texto(endereco, "rua", "a rua"),
+      numero: texto(endereco, "numero", "o número"),
+      complemento: texto(endereco, "complemento", "o complemento", true),
+      bairro: texto(endereco, "bairro", "o bairro"),
+      cidade: texto(endereco, "cidade", "a cidade"),
+      estado: texto(endereco, "estado", "o estado").toUpperCase(),
+    };
+    if (!/^\d{5}-?\d{3}$/.test(enderecoValidado.cep)) throw new ErroCheckout("Informe um CEP válido.");
+    if (!/^(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)$/.test(enderecoValidado.estado)) throw new ErroCheckout("Informe um estado válido.");
+  }
+  if (dados.pagamento !== "pix" && !(dados.fulfillmentType === "pickup" && dados.pagamento === "local")) {
+    throw new ErroCheckout("Entrega aceita somente Pix. Pagamento no local está disponível apenas para retirada.");
   }
   if (!Array.isArray(dados.itens) || dados.itens.length === 0) throw new ErroCheckout("Seu carrinho está vazio.");
   if (dados.itens.length > 100) throw new ErroCheckout("O pedido deve conter no máximo 100 produtos diferentes.");
@@ -66,7 +72,7 @@ function validarBody(body: unknown) {
     return { id, quantidade: item.quantidade };
   });
   // Lista explícita: preços, totais, userId, status e demais campos recebidos são ignorados.
-  return { cliente: clienteValidado, endereco: enderecoValidado, pagamento: dados.pagamento, itens };
+  return { cliente: clienteValidado, endereco: enderecoValidado, pagamento: dados.pagamento, fulfillmentType: dados.fulfillmentType, itens };
 }
 
 export async function POST(request: NextRequest) {
@@ -124,14 +130,28 @@ export async function POST(request: NextRequest) {
       };
     });
     const subtotal = subtotalCentavos / 100;
-    const pedido = await adminDb.collection("orders").add({
+    let fulfillment: Fulfillment = { type: "pickup", shippingFee: 0 };
+    if (dados.fulfillmentType === "delivery") {
+      if (!dados.endereco) throw new ErroCheckout("Preencha o endereço de entrega.");
+      fulfillment = await validateDelivery(dados.endereco);
+    }
+    const totalCentavos = subtotalCentavos + Math.round(fulfillment.shippingFee * 100);
+    if (!Number.isSafeInteger(totalCentavos)) throw new ErroCheckout("Valor do pedido excede o limite permitido.");
+    const total = totalCentavos / 100;
+    const pedido = adminDb.collection("orders").doc();
+    // Montar tudo antes da escrita: configuração inválida não deixa um pedido parcial.
+    const payment = dados.pagamento === "pix" ? createManualPixPayment(pedido.id, total)
+      : { provider: "manual", method: "local", status: "pending" };
+    await pedido.set({
       userId: uid, cliente: dados.cliente, endereco: dados.endereco, itens,
-      subtotal, frete: 0, total: subtotal, pagamento: dados.pagamento,
+      subtotal, frete: fulfillment.shippingFee, total, fulfillment, pagamento: dados.pagamento,
       status: "aguardando_pagamento", criadoEm: FieldValue.serverTimestamp(),
-      payment: initialPayment(configuredProviderName(), dados.pagamento as PaymentMethod),
+      payment: { ...payment, createdAt: FieldValue.serverTimestamp() },
     });
     return NextResponse.json({ success: true, orderId: pedido.id }, { status: 201 });
   } catch (error) {
+    if (error instanceof DeliveryError) return NextResponse.json({ error: error.message }, { status: error.status });
+    if (error instanceof PixConfigurationError) return NextResponse.json({ error: error.message }, { status: 503 });
     if (error instanceof ErroCheckout) return NextResponse.json({ error: error.message }, { status: error.status });
     console.error("Erro interno ao criar pedido no checkout.");
     return NextResponse.json({ error: "Não foi possível finalizar o pedido. Tente novamente mais tarde." }, { status: 500 });

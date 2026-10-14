@@ -2,9 +2,11 @@ import { paymentService } from "../../lib/payments";
 import { authenticatedUser, paymentFailure, paymentResponse } from "../../lib/payments/http";
 import { PaymentError } from "../../lib/payments/types";
 import { validOrderId } from "../../lib/payments/service";
+import { GATEWAY_PAYMENTS_ENABLED, gatewayPausedResponse } from "../../lib/payments/availability";
 
 export const runtime = "nodejs";
 export async function GET(request: Request) {
+  if (!GATEWAY_PAYMENTS_ENABLED) return gatewayPausedResponse();
   try {
     const uid = await authenticatedUser(request);
     const id = new URL(request.url).searchParams.get("orderId");
@@ -13,6 +15,7 @@ export async function GET(request: Request) {
   } catch (error) { return paymentFailure(error); }
 }
 export async function POST(request: Request) {
+  if (!GATEWAY_PAYMENTS_ENABLED) return gatewayPausedResponse();
   try {
     const uid = await authenticatedUser(request);
     if (Number(request.headers.get("content-length")) > 16384) throw new PaymentError("Dados de pagamento excedem o limite.");

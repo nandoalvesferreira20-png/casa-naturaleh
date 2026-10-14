@@ -14,6 +14,7 @@ import {
 
 import AdminRoute from "../components/AdminRoute";
 import { db } from "../lib/firebase";
+import { STORE_ADDRESS, addressText, type DeliveryAddress, type Fulfillment } from "../lib/delivery/types";
 
 type ItemPedido = {
   id: number;
@@ -35,15 +36,8 @@ type Pedido = {
     telefone: string;
   };
 
-  endereco: {
-    cep: string;
-    rua: string;
-    numero: string;
-    complemento?: string;
-    bairro: string;
-    cidade: string;
-    estado: string;
-  };
+  endereco?: DeliveryAddress | null;
+  fulfillment?: Fulfillment;
 
   itens: ItemPedido[];
 
@@ -270,6 +264,9 @@ export default function AdminPage() {
     pagamento: string
   ) {
     switch (pagamento) {
+      case "local":
+        return "Pagamento na retirada";
+
       case "pix":
         return "Pix";
 
@@ -669,60 +666,10 @@ export default function AdminPage() {
 
               <div>
                 <span className="text-xs uppercase tracking-[0.15em] text-[var(--color-text-light)]">
-                  Entrega
+                  Recebimento: {pedidoAberto.fulfillment?.type === "pickup" ? "Retirada" : "Entrega"}
                 </span>
-
-                <p className="mt-2 text-sm leading-6">
-                  {
-                    pedidoAberto.endereco
-                      .rua
-                  }
-                  ,{" "}
-                  {
-                    pedidoAberto.endereco
-                      .numero
-                  }
-
-                  {pedidoAberto.endereco
-                    .complemento && (
-                    <>
-                      {" "}
-                      -{" "}
-                      {
-                        pedidoAberto
-                          .endereco
-                          .complemento
-                      }
-                    </>
-                  )}
-
-                  <br />
-
-                  {
-                    pedidoAberto.endereco
-                      .bairro
-                  }
-
-                  <br />
-
-                  {
-                    pedidoAberto.endereco
-                      .cidade
-                  }{" "}
-                  -{" "}
-                  {
-                    pedidoAberto.endereco
-                      .estado
-                  }
-
-                  <br />
-
-                  CEP{" "}
-                  {
-                    pedidoAberto.endereco
-                      .cep
-                  }
-                </p>
+                <p className="mt-2 text-sm leading-6">{pedidoAberto.fulfillment?.type === "pickup" ? STORE_ADDRESS : addressText(pedidoAberto.endereco)}</p>
+                <p className="mt-2 text-sm">Frete: {pedidoAberto.frete === 0 ? "Grátis" : (pedidoAberto.frete ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</p>
               </div>
             </div>
 

@@ -8,6 +8,8 @@ import {
 } from "react";
 
 import { LIMITE_CSV, LIMITE_LOTE, type LinhaImportacao, type ResultadoImportacao } from "../../lib/importacao-produtos";
+import { CATEGORIAS_OFICIAIS } from "../../lib/categorias-importacao";
+import { aplicarCategoriaManual, type EdicaoCategoria } from "../../lib/revisao-categorias";
 
 import AdminRoute from "../../components/AdminRoute";
 import { useAuth } from "../../context/AuthContext";
@@ -56,6 +58,11 @@ function ImportacaoProdutosModal({ obterToken, onConcluir, onFechar }: {
   const requisicao = useRef<AbortController | null>(null);
   const bloqueado = useRef(false);
   const [csv, setCsv] = useState<File | null>(null);
+  const [categoriaPadrao, setCategoriaPadrao] = useState("");
+  const [edicoes, setEdicoes] = useState<EdicaoCategoria[]>([]);
+  const [selecionadas, setSelecionadas] = useState<number[]>([]);
+  const [categoriaMassa, setCategoriaMassa] = useState("");
+  const [mapeamento, setMapeamento] = useState<Record<string, string | null>>({});
   const [imagens, setImagens] = useState<File[]>([]);
   const [linhas, setLinhas] = useState<LinhaImportacao[]>([]);
   const [validando, setValidando] = useState(false);
@@ -70,21 +77,24 @@ function ImportacaoProdutosModal({ obterToken, onConcluir, onFechar }: {
     return () => { requisicao.current?.abort(); elemento?.close(); };
   }, []);
 
-  async function validar(arquivo: File | null, selecionadas: File[]) {
+  async function validar(arquivo: File | null, imagensSelecionadas: File[]) {
     requisicao.current?.abort();
     const controller = new AbortController();
     requisicao.current = controller;
     setCsv(arquivo);
-    setImagens(selecionadas);
+    setImagens(imagensSelecionadas);
+    const revisoes = arquivo === csv ? edicoes : [];
+    if (arquivo !== csv) setEdicoes([]);
+    setSelecionadas([]);
     setLinhas([]);
     setErro("");
     setValidando(false);
     if (!arquivo) return;
-    if (!arquivo.name.toLowerCase().endsWith(".csv") || arquivo.size > LIMITE_CSV) {
-      setErro("Selecione um arquivo .csv de até 1 MB.");
+    if (!/\.(csv|xls|xlsx)$/i.test(arquivo.name) || arquivo.size > LIMITE_CSV) {
+      setErro("Selecione CSV, XLS ou XLSX de até 5 MB.");
       return;
     }
-    if (selecionadas.length > 200 || selecionadas.reduce((total, imagem) => total + imagem.size, 0) > LIMITE_LOTE) {
+    if (imagensSelecionadas.length > 200 || imagensSelecionadas.reduce((total, imagem) => total + imagem.size, 0) > LIMITE_LOTE) {
       setErro("Selecione até 200 imagens, totalizando no máximo 50 MB por lote.");
       return;
     }
@@ -93,16 +103,18 @@ function ImportacaoProdutosModal({ obterToken, onConcluir, onFechar }: {
       const token = await obterToken();
       if (controller.signal.aborted) return;
       const form = new FormData();
+      form.append("categoriaPadrao", categoriaPadrao);
+      form.append("categorias", JSON.stringify(revisoes));
       form.append("acao", "validar");
       form.append("csv", arquivo);
-      form.append("manifesto", JSON.stringify(selecionadas.map(({ name, size, type }) => ({ name, size, type }))));
+      form.append("manifesto", JSON.stringify(imagensSelecionadas.map(({ name, size, type }) => ({ name, size, type }))));
       const response = await fetch("/api/admin/produtos/importar", {
         method: "POST", headers: { Authorization: `Bearer ${token}` }, body: form, signal: controller.signal,
       });
       if (!response.headers.get("content-type")?.includes("application/json")) throw new Error("O servidor não retornou a validação. Tente novamente.");
       const dados = await response.json();
       if (!response.ok) throw new Error(dados.error || "Não foi possível validar o CSV.");
-      if (!controller.signal.aborted) setLinhas(dados.linhas);
+      if (!controller.signal.aborted) { setLinhas(dados.linhas); setMapeamento(dados.relatorio?.mapeamento ?? {}); }
     } catch (error) {
       if (!controller.signal.aborted) setErro(error instanceof Error ? error.message : "Erro na validação.");
     } finally {
@@ -118,7 +130,9 @@ function ImportacaoProdutosModal({ obterToken, onConcluir, onFechar }: {
     try {
       const token = await obterToken();
       const form = new FormData();
+      form.append("categoriaPadrao", categoriaPadrao);
       form.append("acao", "importar");
+      form.append("categorias", JSON.stringify(edicoes));
       form.append("csv", csv);
       // Enviar os arquivos originais para que o backend revalide todas as linhas.
       imagens.forEach(imagem => form.append("imagens", imagem));
@@ -138,6 +152,11 @@ function ImportacaoProdutosModal({ obterToken, onConcluir, onFechar }: {
     }
   }
 
+  function definirCategoria(ids: number[], categoria: string) {
+    if (!categoria) return;
+    setLinhas(atual => atual.map(l => ids.includes(l.linha) ? aplicarCategoriaManual(l, categoria) : l));
+    setEdicoes(atual => [...atual.filter(e => !ids.includes(e.linha)), ...ids.map(linha => ({ linha, categoria }))]);
+  }
   const botao = "cursor-pointer rounded-full border border-[var(--color-bg-soft)] px-6 py-3.5 text-sm font-semibold transition hover:bg-[var(--color-bg-soft)] disabled:cursor-not-allowed disabled:opacity-50";
   return (
     <dialog ref={dialog} aria-labelledby="titulo-importacao" aria-describedby="descricao-importacao"
@@ -146,7 +165,7 @@ function ImportacaoProdutosModal({ obterToken, onConcluir, onFechar }: {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 id="titulo-importacao" className="text-2xl font-semibold">Importar produtos em lote</h2>
-          <p id="descricao-importacao" className="mt-3 text-sm text-[var(--color-text-light)]">Cadastre vários produtos de uma vez utilizando um arquivo CSV e suas respectivas imagens.</p>
+          <p id="descricao-importacao" className="mt-3 text-sm text-[var(--color-text-light)]">Selecione CSV, XLS ou XLSX do ERP. As imagens por URL serão copiadas para nosso Storage após a confirmação.</p>
         </div>
         <button type="button" aria-label="Fechar importação" disabled={importando} onClick={resultado ? onConcluir : onFechar} className={botao}>×</button>
       </div>
@@ -161,35 +180,52 @@ function ImportacaoProdutosModal({ obterToken, onConcluir, onFechar }: {
       ) : (
         <div className="mt-7 space-y-5" aria-busy={importando || validando}>
           <a href="/modelos/importacao-produtos.csv" download className="inline-block text-sm font-semibold text-[var(--color-primary)] underline">Baixar modelo CSV</a>
-          <p className="text-xs text-[var(--color-text-light)]">Até 200 produtos por lote. CSV de até 1 MB, separado por vírgulas e com preço em ponto decimal. Imagens de até 5 MB cada e 50 MB no total. O nome da imagem deve corresponder exatamente ao arquivo selecionado.</p>
+          <p className="text-xs text-[var(--color-text-light)]">Até 1.000 produtos e planilha de até 5 MB. Imagens de até 5 MB cada e 50 MB no total. O CSV antigo com imagens locais continua disponível. Produtos sem imagem podem ser importados.</p>
           <div className="grid gap-5 sm:grid-cols-2">
-            <label className="text-sm font-medium">Selecionar CSV
-              <input type="file" accept=".csv" disabled={importando} onChange={event => void validar(event.target.files?.[0] ?? null, imagens)} className="mt-2 block w-full rounded-2xl border border-[var(--color-bg-soft)] bg-[var(--color-bg)] p-4" />
+            <label className="text-sm font-medium">Selecionar planilha
+              <input type="file" accept=".csv,.xls,.xlsx" disabled={importando} onChange={event => void validar(event.target.files?.[0] ?? null, imagens)} className="mt-2 block w-full rounded-2xl border border-[var(--color-bg-soft)] bg-[var(--color-bg)] p-4" />
             </label>
-            <label className="text-sm font-medium">Selecionar imagens
+            <label className="text-sm font-medium">Imagens locais (opcional)
               <input type="file" multiple accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" disabled={importando} onChange={event => void validar(csv, Array.from(event.target.files ?? []))} className="mt-2 block w-full rounded-2xl border border-[var(--color-bg-soft)] bg-[var(--color-bg)] p-4" />
             </label>
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {[["Produtos encontrados", linhas.length], ["Produtos válidos", validas], ["Com erro", linhas.length - validas], ["Imagens selecionadas", imagens.length]].map(([rotulo, valor]) => (
+          <label className="block text-sm">Categoria padrão para sugestões incertas (opcional)
+            <select value={categoriaPadrao} disabled={importando} onChange={e => { setCategoriaPadrao(e.target.value); requisicao.current?.abort(); setValidando(false); setLinhas([]); }} className="mt-2 block w-full rounded-xl border p-3">
+              <option value="">Revisar cada produto incerto</option>
+              {CATEGORIAS_OFICIAIS.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </label>
+          {linhas.length > 0 && <p role="status">Planilha analisada com sucesso. Campos identificados: {Object.entries(mapeamento).map(([campo, coluna]) => `${campo}: ${coluna ?? "ausente"}`).join(" · ")}</p>}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {[["Produtos encontrados", linhas.length], ["Produtos válidos", validas], ["Problemas", linhas.filter(l => l.erros.length && !l.existente).length], ["Já existentes", linhas.filter(l => l.existente).length], ["Com imagem", linhas.filter(l => l.produto.imagem).length], ["Sem imagem", linhas.filter(l => !l.produto.imagem).length]].map(([rotulo, valor]) => (
               <div key={rotulo} className="rounded-2xl bg-[var(--color-bg)] p-4"><p className="text-xs text-[var(--color-text-light)]">{rotulo}</p><p className="mt-2 text-2xl font-semibold">{valor}</p></div>
             ))}
           </div>
-          {validando && <p role="status">Validando CSV e verificando slugs no banco...</p>}
+          {validando && <p role="status">Analisando planilha e verificando produtos existentes...</p>}
           {erro && <p role="alert" className="rounded-2xl bg-[var(--color-bg-soft)] p-4 text-sm">{erro}</p>}
+          {linhas.length > 0 && <div className="flex flex-wrap items-center gap-3">
+            <span>{selecionadas.length} selecionados · {linhas.filter(l => !l.categoriaManual && (l.classificacao?.confianca ?? 1) < .8).length} categorias para revisão</span>
+            <select aria-label="Categoria para edição em massa" value={categoriaMassa} disabled={importando || validando} onChange={e => setCategoriaMassa(e.target.value)} className="rounded-xl border p-3">
+              <option value="">Definir categoria</option>{CATEGORIAS_OFICIAIS.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <button type="button" className={botao} disabled={!selecionadas.length || !categoriaMassa || importando || validando} onClick={() => definirCategoria(selecionadas, categoriaMassa)}>Aplicar aos selecionados</button>
+          </div>}
           {linhas.length > 0 && <div className="max-h-80 overflow-auto rounded-2xl border border-[var(--color-bg-soft)]">
             <table className="w-full text-left text-sm">
-              <thead className="sticky top-0 bg-[var(--color-bg)]"><tr>{["Linha", "Produto", "Categoria", "Preço", "Estoque", "Imagem", "Status da validação"].map(titulo => <th key={titulo} scope="col" className="px-4 py-3 font-semibold">{titulo}</th>)}</tr></thead>
-              <tbody>{linhas.map(({ linha, produto, erros }) => <tr key={linha} className={erros.length ? "border-t border-[var(--color-bg-soft)] bg-[var(--color-bg-soft)]/40" : "border-t border-[var(--color-bg-soft)]"}>
-                <td className="px-4 py-3">{linha}</td><td className="px-4 py-3">{produto.nome}</td><td className="px-4 py-3">{produto.categoria}</td>
+              <thead className="sticky top-0 bg-[var(--color-bg)]"><tr><th className="px-4 py-3"><input type="checkbox" aria-label="Selecionar todos os produtos" disabled={importando || validando} checked={linhas.length > 0 && selecionadas.length === linhas.length} onChange={e => setSelecionadas(e.target.checked ? linhas.map(l => l.linha) : [])} /></th>{["Linha", "Produto", "Categoria sugerida / final", "Confiança", "Preço", "Estoque", "Slug", "Imagem", "Status"].map(titulo => <th key={titulo} scope="col" className="px-4 py-3 font-semibold">{titulo}</th>)}</tr></thead>
+              <tbody>{linhas.map(({ linha, produto, erros, avisos, sku, classificacao, categoriaManual, categoriaOriginal }) => <tr key={linha} className={erros.length ? "border-t border-[var(--color-bg-soft)] bg-[var(--color-bg-soft)]/40" : "border-t border-[var(--color-bg-soft)]"}>
+                <td className="px-4 py-3"><input type="checkbox" aria-label={`Selecionar ${produto.nome}`} disabled={importando || validando} checked={selecionadas.includes(linha)} onChange={e => setSelecionadas(atual => e.target.checked ? [...atual, linha] : atual.filter(id => id !== linha))} /></td>
+                <td className="px-4 py-3">{linha}</td><td className="px-4 py-3">{produto.nome}{sku && <p className="text-xs">SKU: {sku}</p>}</td>
+                <td className="min-w-56 px-4 py-3"><select aria-label={`Categoria de ${produto.nome}`} disabled={importando || validando} value={!categoriaManual && (classificacao?.confianca ?? 1) < .6 ? "" : produto.categoria} onChange={e => definirCategoria([linha], e.target.value)} className="w-full rounded-xl border p-2"><option value="" disabled>Escolha uma categoria</option>{CATEGORIAS_OFICIAIS.map(c => <option key={c} value={c}>{c}</option>)}</select><p className="text-xs">Original: {categoriaOriginal || "ausente"}</p>{classificacao && <p className="text-xs">Sugestão: {classificacao.categoria || "sem categoria"} · {classificacao.motivo}</p>}</td>
+                <td className="px-4 py-3">{classificacao ? `${Math.round(classificacao.confianca * 100)}%` : "—"}{!categoriaManual && classificacao && classificacao.confianca >= .6 && classificacao.confianca < .8 && <button type="button" disabled={importando || validando} className="mt-2 block underline" onClick={() => definirCategoria([linha], produto.categoria)}>Confirmar categoria</button>}</td>
                 <td className="whitespace-nowrap px-4 py-3">{produto.preco && Number.isFinite(Number(produto.preco)) ? Number(produto.preco).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : produto.preco || "—"}</td>
-                <td className="px-4 py-3">{produto.estoque || "—"}</td><td className="break-all px-4 py-3">{produto.imagem}</td>
-                <td className="min-w-48 px-4 py-3">{erros.length ? erros.join("; ") : "✓ Válido"}</td>
+                <td className="px-4 py-3">{produto.estoque || "—"}</td><td className="px-4 py-3">{produto.slug}</td><td className="break-all px-4 py-3">{erros.some(e => e.includes("URL de imagem")) ? "URL inválida" : produto.imagem ? "Imagem encontrada" : "Imagem ausente"}<span className="block text-xs">{produto.imagem}</span></td>
+                <td className="min-w-48 px-4 py-3">{erros.length ? erros.join("; ") : "✓ Válido"}<p>{categoriaManual ? "Categoria revisada" : classificacao?.status}</p>{avisos?.map(aviso => <p key={aviso} className="text-xs">{aviso}</p>)}</td>
               </tr>)}</tbody>
             </table>
           </div>}
           <p className="text-sm text-[var(--color-text-light)]">Somente as linhas válidas serão importadas. Linhas com erro serão ignoradas. Os dados serão verificados novamente na confirmação.</p>
-          {importando && <p role="status">Enviando imagens e cadastrando produtos. Aguarde e mantenha esta janela aberta.</p>}
+          {importando && <p role="status">Baixando e enviando imagens (até quatro por vez), depois cadastrando produtos. Aguarde e mantenha esta janela aberta.</p>}
           <div className="flex flex-wrap gap-3">
             <button type="button" disabled={!validas || validando || importando} onClick={() => void importar()} className="cursor-pointer rounded-full bg-[var(--color-primary)] px-6 py-3.5 text-sm font-semibold text-[var(--color-white)] transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50">{importando ? "Importando..." : `Importar ${validas} produtos`}</button>
             <button type="button" disabled={!csv || validando || importando} onClick={() => void validar(csv, imagens)} className={botao}>Validar novamente</button>

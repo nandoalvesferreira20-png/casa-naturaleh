@@ -2,9 +2,13 @@ import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { verificarAdmin } from "../../../../lib/firebase-admin";
 import {
-  lerCSV, validarLinhas, valorAtivo, LIMITE_CSV, LIMITE_LOTE,
+  valorAtivo, LIMITE_CSV, LIMITE_LOTE,
   type ImagemImportacao, type ResultadoImportacao,
 } from "../../../../lib/importacao-produtos";
+
+import { analisarPlanilha, validarProdutos, urlImagemValida } from "../../../../lib/planilha-produtos";
+import { baixarImagem, validarConteudo, concorrenciaLimitada } from "../../../../lib/imagem-importacao";
+import { classificarLinhas, lerEdicoesCategoria } from "../../../../lib/revisao-categorias";
 
 export const runtime = "nodejs";
 
@@ -22,13 +26,15 @@ export async function POST(request: NextRequest) {
     const form = await request.formData();
     const csv = form.get("csv");
     const acao = form.get("acao");
-    if (!(csv instanceof File) || !csv.name.toLowerCase().endsWith(".csv") || csv.size > LIMITE_CSV) {
-      return NextResponse.json({ error: "Selecione um CSV de até 1 MB." }, { status: 400 });
+    if (!(csv instanceof File) || !/\.(csv|xls|xlsx)$/i.test(csv.name) || csv.size > LIMITE_CSV) {
+      return NextResponse.json({ error: "Selecione CSV, XLS ou XLSX de até 5 MB." }, { status: 400 });
     }
     if (acao !== "validar" && acao !== "importar") {
       return NextResponse.json({ error: "Operação inválida." }, { status: 400 });
     }
-    const linhas = lerCSV(await csv.text());
+    const { linhas: originais, relatorio } = analisarPlanilha(Buffer.from(await csv.arrayBuffer()));
+    const edicoes = lerEdicoesCategoria(JSON.parse(String(form.get("categorias") ?? "[]")));
+    const linhas = classificarLinhas(originais, edicoes, String(form.get("categoriaPadrao") ?? ""));
     const arquivos = form.getAll("imagens").filter((item): item is File => item instanceof File);
     let imagens: ImagemImportacao[] = arquivos;
     if (acao === "validar") {
@@ -44,15 +50,15 @@ export async function POST(request: NextRequest) {
 
     // O cliente administrativo só é carregado depois da autenticação e autorização.
     const { supabaseAdmin } = await import("../../../../lib/supabase-admin");
-    const slugs = [...new Set(linhas.map(linha => linha.produto.slug).filter(Boolean))];
-    const existentes = new Set<string>();
-    for (let i = 0; i < slugs.length; i += 50) {
-      const { data, error } = await supabaseAdmin.from("products").select("slug").in("slug", slugs.slice(i, i + 50));
-      if (error) throw new Error("Não foi possível verificar os slugs no banco. Tente novamente.");
-      for (const produto of data ?? []) existentes.add(produto.slug);
+    const existentes: { nome: string; slug: string }[] = [];
+    for (let offset = 0; ; offset += 1000) {
+      const { data, error } = await supabaseAdmin.from("products").select("nome,slug").order("id").range(offset, offset + 999);
+      if (error) throw new Error("Não foi possível consultar os produtos existentes.");
+      existentes.push(...(data ?? []));
+      if (!data || data.length < 1000) break;
     }
-    const validadas = validarLinhas(linhas, imagens, existentes);
-    if (acao === "validar") return NextResponse.json({ linhas: validadas });
+    const validadas = validarProdutos(linhas, imagens, existentes);
+    if (acao === "validar") return NextResponse.json({ linhas: validadas, relatorio });
 
     const validas = validadas.filter(linha => !linha.erros.length);
     const resultado: ResultadoImportacao = {
@@ -77,37 +83,43 @@ export async function POST(request: NextRequest) {
       resultado.avisos.push("Não foi possível remover algumas imagens após a falha. A limpeza precisa ser verificada pelo suporte; os caminhos foram registrados no servidor.");
     }
 
-    for (const { linha, produto } of validas) {
-      const arquivo = arquivos.find(item => item.name === produto.imagem)!;
-      const extensao = arquivo.name.split(".").pop()!.toLowerCase();
-      const caminho = `catalogo/${randomUUID()}.${extensao}`;
+    const cache = new Map<string, Promise<{ caminho: string; url: string }>>();
+    let bytesEnviados = 0;
+    await concorrenciaLimitada(validas, async ({ linha, produto }) => {
+      let caminho = "";
       try {
-        const buffer = Buffer.from(await arquivo.arrayBuffer());
-        // Não confiar apenas na extensão/MIME enviados pelo navegador.
-        const jpeg = buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
-        const png = buffer.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
-        const webp = buffer.toString("ascii", 0, 4) === "RIFF" && buffer.toString("ascii", 8, 12) === "WEBP";
-        if (!((/jpe?g/.test(extensao) && jpeg) || (extensao === "png" && png) || (extensao === "webp" && webp))) {
-          throw new Error("O conteúdo do arquivo não corresponde ao formato da imagem.");
+        let url = "";
+        if (produto.imagem) {
+          let promessa = cache.get(produto.imagem);
+          if (!promessa) {
+            promessa = (async () => {
+              const arquivo = arquivos.find(item => item.name === produto.imagem);
+              const conteudo = urlImagemValida(produto.imagem)
+                ? await baixarImagem(produto.imagem)
+                : validarConteudo(Buffer.from(await arquivo!.arrayBuffer()), arquivo!.type || undefined);
+              bytesEnviados += conteudo.buffer.length;
+              if (bytesEnviados > LIMITE_LOTE) throw new Error("As imagens excedem 50 MB. Divida a importação.");
+              const path = `catalogo/${randomUUID()}-${produto.slug.slice(0, 80)}.${conteudo.extensao}`;
+              try {
+                const { error } = await storage.upload(path, conteudo.buffer, { contentType: conteudo.tipo, cacheControl: "3600", upsert: false });
+                if (error) throw new Error("Falha ao enviar a imagem ao Storage.");
+                return { caminho: path, url: storage.getPublicUrl(path).data.publicUrl };
+              } catch (error) { await remover([path]); throw error; }
+            })();
+            cache.set(produto.imagem, promessa);
+          }
+          const imagem = await promessa; caminho = imagem.caminho; url = imagem.url;
         }
-        const { error } = await storage.upload(caminho, buffer, {
-          contentType: extensao === "jpg" || extensao === "jpeg" ? "image/jpeg" : `image/${extensao}`,
-          cacheControl: "3600", upsert: false,
-        });
-        if (error) throw new Error("Falha ao enviar a imagem.");
-        const { data } = storage.getPublicUrl(caminho);
         preparados.push({ linha, caminho, dados: {
           id: randomUUID(), nome: produto.nome, slug: produto.slug, categoria: produto.categoria,
           preco: Number(produto.preco), estoque: Number(produto.estoque), ativo: valorAtivo(produto.ativo)!,
-          descricao: produto.descricao || null, imagem: data.publicUrl,
+          descricao: produto.descricao, imagem: url,
         } });
       } catch (error) {
-        // Inclui upload com resposta perdida: o path único pertence somente a esta tentativa.
-        await remover([caminho]);
         resultado.erros++;
-        resultado.detalhes.push({ linha, mensagem: error instanceof Error ? error.message : "Falha ao enviar a imagem." });
+        resultado.detalhes.push({ linha, mensagem: `Falha ao importar imagem: ${error instanceof Error ? error.message : "erro desconhecido"}` });
       }
-    }
+    });
 
     if (preparados.length) {
       try {
@@ -125,7 +137,8 @@ export async function POST(request: NextRequest) {
           }
           const falhos = preparados.filter(item => !confirmados.has(item.dados.id));
           resultado.importados = confirmados.size;
-          await remover(falhos.map(item => item.caminho));
+          const preservados = new Set(preparados.filter(item => confirmados.has(item.dados.id)).map(item => item.caminho));
+          await remover([...new Set(falhos.map(item => item.caminho).filter(p => p && !preservados.has(p)))]);
           resultado.erros += falhos.length;
           resultado.detalhes.push(...falhos.map(item => ({ linha: item.linha, mensagem: "Falha ao cadastrar o lote. Verifique se o slug foi cadastrado por outro administrador e valide novamente." })));
         } catch {

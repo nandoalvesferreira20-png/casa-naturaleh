@@ -1,7 +1,7 @@
-export const LIMITE_CSV = 1024 * 1024;
+export const LIMITE_CSV = 5 * 1024 * 1024;
 export const LIMITE_IMAGEM = 5 * 1024 * 1024;
 export const LIMITE_LOTE = 50 * 1024 * 1024;
-export const LIMITE_LINHAS = 200;
+export const LIMITE_LINHAS = 1000;
 
 const colunas = ["nome", "slug", "categoria", "preco", "descricao", "estoque", "ativo", "imagem"] as const;
 type Coluna = typeof colunas[number];
@@ -10,6 +10,16 @@ export type LinhaImportacao = {
   linha: number;
   produto: Record<Coluna, string>;
   erros: string[];
+  avisos?: string[];
+  sku?: string;
+  imagemOriginal?: string;
+  existente?: boolean;
+  categoriaOriginal?: string;
+  subCategoria?: string;
+  marca?: string;
+  unidade?: string;
+  classificacao?: import("./categorias-importacao").ClassificacaoCategoria;
+  categoriaManual?: boolean;
 };
 export type ResultadoImportacao = {
   importados: number;
@@ -60,9 +70,9 @@ export function lerCSV(texto: string): LinhaImportacao[] {
 }
 
 export function valorAtivo(valor: string): boolean | undefined {
-  const normalizado = valor.toLowerCase();
-  if (["true", "1", "sim"].includes(normalizado)) return true;
-  if (["false", "0", "nao", "não"].includes(normalizado)) return false;
+  const normalizado = valor.trim().toLowerCase();
+  if (["true", "1", "sim", "ativo", "a"].includes(normalizado)) return true;
+  if (["false", "0", "nao", "não", "inativo", "i"].includes(normalizado)) return false;
 }
 
 export function erroImagem(imagem: ImagemImportacao): string | undefined {
