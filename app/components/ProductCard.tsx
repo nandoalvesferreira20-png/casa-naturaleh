@@ -26,8 +26,8 @@ export default function ProductCard({
   });
 
   return (
-    <article className="overflow-hidden rounded-[1.5rem] border border-black/5 bg-white transition hover:-translate-y-1 hover:shadow-md cn-card">
-      <div className="relative overflow-hidden flex h-64 items-center justify-center bg-[var(--color-bg-soft)]">
+    <article className="flex h-full min-w-0 flex-col overflow-hidden rounded-[1.5rem] border border-black/5 bg-white transition hover:-translate-y-1 hover:shadow-md cn-card">
+      <div className="relative flex h-64 shrink-0 items-center justify-center overflow-hidden bg-[var(--color-bg-soft)]">
         <Image
           src={imagem}
           alt={nome}
@@ -42,23 +42,23 @@ export default function ProductCard({
         )}
       </div>
 
-      <div className="p-5">
-        <span className="text-xs font-medium uppercase tracking-[0.18em] text-[var(--color-primary)] cn-brand-text">
+      <div className="flex flex-1 flex-col p-5">
+        <span className="block h-4 truncate text-xs font-medium uppercase leading-4 tracking-[0.18em] text-[var(--color-primary)] cn-brand-text">
           {categoria}
         </span>
 
-        <Heading className="cn-ui-title mt-2 text-lg font-semibold">
+        <Heading title={nome} className="cn-ui-title mt-2 line-clamp-2 h-14 min-h-14 break-words text-lg font-semibold leading-7">
           {nome}
         </Heading>
 
-        <div className="mt-5 flex items-center justify-between gap-4">
-          <span className="text-lg font-semibold">
+        <div className="mt-auto flex min-h-16 flex-wrap items-center justify-between gap-x-3 gap-y-2 pt-5">
+          <span className="whitespace-nowrap text-lg font-semibold tabular-nums">
             {precoFormatado}
           </span>
 
           <a
             href={`/produto/${slug}`}
-            className="rounded-full bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 cn-button-primary"
+            className="inline-flex h-11 shrink-0 items-center justify-center whitespace-nowrap rounded-full bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 cn-button-primary"
           >
             Ver produto
           </a>
