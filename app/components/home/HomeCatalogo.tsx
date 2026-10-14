@@ -26,7 +26,7 @@ export default function HomeCatalogo() {
       <div className={styles.categories}>
         {catalogo?.categorias.map(categoria => <Link key={categoria.nome} href={{ pathname: "/loja", query: { categoria: categoria.nome } }} className={styles.category}>
           <div className={styles.categoryPhoto}>
-            {categoria.imagem ? <Image src={categoria.imagem} alt={`Imagem representativa da categoria ${categoria.nome}`} fill sizes="(min-width: 1200px) 270px, (min-width: 768px) 23vw, 45vw" className={styles.categoryImage} /> : <div className={styles.photoPending}><svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true"><rect x="3" y="5" width="22" height="18" rx="2" stroke="currentColor" /><path d="m3 20 7-7 6 6 4-4 5 5" stroke="currentColor" /><circle cx="19" cy="10" r="2" stroke="currentColor" /></svg><span>Foto de {categoria.nome}</span><small>A adicionar</small></div>}
+            {categoria.imagem ? <Image src={categoria.imagem} alt={categoria.alt} fill sizes="(min-width: 1200px) 270px, (min-width: 768px) 23vw, 45vw" className={styles.categoryImage} /> : <div className={styles.photoPending}><svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true"><rect x="3" y="5" width="22" height="18" rx="2" stroke="currentColor" /><path d="m3 20 7-7 6 6 4-4 5 5" stroke="currentColor" /><circle cx="19" cy="10" r="2" stroke="currentColor" /></svg><span>Foto de {categoria.nome}</span><small>A adicionar</small></div>}
           </div>
           <h3>{categoria.nome}<span aria-hidden="true">↗</span></h3>
         </Link>)}

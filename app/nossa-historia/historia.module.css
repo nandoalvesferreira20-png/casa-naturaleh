@@ -32,15 +32,12 @@
 .timeline p { font-size: 14px; line-height: 1.9; margin-top: 12px; max-width: 300px; color: #555e55; }
 .future .heading { margin-top: 16px; }
 .future .prose { margin-top: 26px; }
-.placeholder { aspect-ratio: 4 / 3; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 16px; background: #e9eadf; border: 1px solid #89987845; color: #555e55; text-align: center; padding: 24px; }
-.placeholder figcaption span { display: block; font-size: 14px; }
-.placeholder figcaption small { display: block; font-size: 11px; margin-top: 6px; }
+.inaugurationVideo { display: block; width: 100%; min-width: 0; aspect-ratio: 4 / 3; object-fit: contain; background: #2b312e; border: 1px solid #e4e6c340; }
 .inauguration { background: var(--color-dark); color: var(--color-bg); padding-block: 72px 88px; }
 .inauguration .eyebrow { color: var(--color-bg-soft); }
 .date { font-size: clamp(46px, 7.4vw, 92px); font-weight: 400; line-height: 1.12; letter-spacing: -.055em; margin-top: 18px; }
 .date span { color: var(--color-bg-soft); }
 .inaugurationGrid { display: grid; grid-template-columns: 1.15fr 1fr; align-items: center; gap: 64px; margin-top: 48px; }
-.placeholderDark { background: #2b312e; color: #e4e6d9; border-color: #e4e6c340; }
 .inauguration .prose { color: #e2e4db; }
 .closingLine { font-size: 23px; line-height: 1.55; margin-top: 30px; font-weight: 500; letter-spacing: -.025em; }
 .closingLine span { display: block; color: var(--color-bg-soft); }

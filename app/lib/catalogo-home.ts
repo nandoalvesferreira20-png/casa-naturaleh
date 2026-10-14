@@ -3,15 +3,15 @@ import type { CategoriaProduto } from "./categorias-importacao";
 
 export type ProdutoHome = { id: string; nome: string; slug: string; categoria: string; preco: number; imagem: string; estoque: number };
 export const CATEGORIAS_HOME = [
-  { nome: "Chás", arquivo: "chas", imagem: "/images/produtos/chá.jpg" },
-  { nome: "Suplementos", arquivo: "suplementos", imagem: "/images/produtos/creatina.jpg" },
-  { nome: "Farinhas", arquivo: "farinhas", imagem: null },
-  { nome: "Oleaginosas", arquivo: "oleaginosas", imagem: null },
-  { nome: "Cereais", arquivo: "cereais", imagem: null },
-  { nome: "Sementes", arquivo: "sementes", imagem: null },
-  { nome: "Temperos", arquivo: "temperos", imagem: null },
-  { nome: "Snacks", arquivo: "snacks", imagem: null },
-] satisfies { nome: CategoriaProduto; arquivo: string; imagem: string | null }[];
+  { nome: "Chás", arquivo: "chas", imagem: "/images/hero/chá.webp", alt: "Chá representando a categoria Chás" },
+  { nome: "Suplementos", arquivo: "suplementos", imagem: "/images/hero/creatina.webp", alt: "Creatina representando a categoria Suplementos" },
+  { nome: "Farinhas", arquivo: "farinhas", imagem: "/images/hero/farinha.jpg", alt: "Farinha representando a categoria Farinhas" },
+  { nome: "Oleaginosas", arquivo: "oleaginosas", imagem: "/images/hero/amendoim.jpg", alt: "Amendoim representando a categoria Oleaginosas" },
+  { nome: "Cereais", arquivo: "cereais", imagem: "/images/hero/granola.jpg", alt: "Granola representando a categoria Cereais" },
+  { nome: "Sementes", arquivo: "sementes", imagem: "/images/hero/ervilha.jpg", alt: "Ervilha representando a categoria Sementes" },
+  { nome: "Temperos", arquivo: "temperos", imagem: "/images/hero/dry-rub.jpg", alt: "Dry rub representando a categoria Temperos" },
+  { nome: "Snacks", arquivo: "snacks", imagem: "/images/hero/batata-doce.jpg", alt: "Batata-doce representando a categoria Snacks" },
+] satisfies { nome: CategoriaProduto; arquivo: string; imagem: string | null; alt: string }[];
 
 export async function consultarCatalogoHome(client: SupabaseClient) {
   // Uma consulta de produtos limitada a quatro. Categorias consultam somente

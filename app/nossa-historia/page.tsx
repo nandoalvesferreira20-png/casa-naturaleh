@@ -14,19 +14,6 @@ const marcos = [
   { ano: "2026", titulo: "O sonho ganha forma", texto: "Depois de planejamento, obras, escolha de fornecedores e uma curadoria cuidadosa de produtos, a Casa Naturaleh finalmente se torna realidade." },
 ];
 
-function FotoPendente({ legenda, escura = false }: { legenda: string; escura?: boolean }) {
-  return (
-    <figure className={`${styles.placeholder} ${escura ? styles.placeholderDark : ""}`}>
-      <svg width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
-        <rect x="4.5" y="7.5" width="27" height="21" rx="2" stroke="currentColor" />
-        <circle cx="24" cy="14" r="2.5" stroke="currentColor" />
-        <path d="m5 25 9-9 7 7 4-4 6 6" stroke="currentColor" strokeLinejoin="round" />
-      </svg>
-      <figcaption><span>{legenda}</span><small>Registro real a adicionar</small></figcaption>
-    </figure>
-  );
-}
-
 export default function NossaHistoriaPage() {
   return (
     <div className={styles.page}>
@@ -76,7 +63,10 @@ export default function NossaHistoriaPage() {
           <p className={styles.eyebrow}>O dia em que abrimos as portas.</p>
           <h2 id="inauguracao-titulo" className={styles.date}><time dateTime="2026-05-30">30 de maio <span>de 2026</span></time></h2>
           <div className={styles.inaugurationGrid}>
-            <FotoPendente legenda="Foto da inauguração" escura />
+            <video className={styles.inaugurationVideo} controls playsInline preload="metadata" aria-label="Vídeo da inauguração da Casa Naturaleh">
+              <source src="/images/hero/naturaleh.mp4" type="video/mp4" />
+              Seu navegador não suporta reprodução de vídeo.
+            </video>
             <div className={styles.inaugurationCopy}>
               <div className={styles.prose}>
                 <p>No dia 30 de maio de 2026, o que antes existia apenas em planos e ideias passou a ter endereço, prateleiras, aromas, encontros e histórias.</p>
