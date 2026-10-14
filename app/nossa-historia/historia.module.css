@@ -1,0 +1,91 @@
+.page { background: var(--color-bg); color: var(--color-dark); }
+.container { width: min(100% - 80px, 1120px); margin-inline: auto; }
+.eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; line-height: 1.8; }
+.hero { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 64px; padding-block: 56px 64px; }
+.heroCopy { padding-bottom: 24px; }
+.heroFigure, .originCopy, .inaugurationCopy, .futureFigure { min-width: 0; }
+.hero h1 { font-size: clamp(64px, 7.5vw, 104px); font-weight: 500; letter-spacing: -.065em; line-height: 1.02; margin-top: 28px; }
+.hero h1 span { display: block; }
+.heroLead { max-width: 370px; margin-top: 28px; font-size: 20px; line-height: 1.6; letter-spacing: -.02em; }
+.readLink { display: inline-flex; align-items: center; gap: 24px; min-height: 44px; margin-top: 32px; font-size: 13px; border-bottom: 1px solid var(--color-primary); }
+.readLink span { font-size: 21px; }
+.heroPhoto, .futurePhoto { position: relative; overflow: hidden; background: var(--color-bg-soft); }
+.heroPhoto { aspect-ratio: 1.13; border-radius: 2px 80px 2px 2px; }
+.photo { object-fit: cover; }
+.heroPhoto .photo { object-position: center 58%; }
+.caption { margin-top: 12px; font-size: 11px; line-height: 1.7; color: #555e55; }
+.origin { display: grid; grid-template-columns: 1fr 3fr; gap: 64px; padding-block: 76px; border-top: 1px solid #22272526; scroll-margin-top: 100px; }
+.origin > h2 { padding-top: 8px; }
+.opening { font-size: clamp(22px, 2.5vw, 30px); font-weight: 500; line-height: 1.6; letter-spacing: -.025em; }
+.prose { font-size: 15px; line-height: 1.95; color: #555e55; }
+.prose p + p { margin-top: 20px; }
+.origin .prose { margin-top: 28px; max-width: 660px; }
+.journey { padding-block: 36px 84px; }
+.heading { font-size: clamp(28px, 3.2vw, 42px); line-height: 1.25; font-weight: 500; letter-spacing: -.045em; text-wrap: balance; }
+.journey .heading { margin-top: 14px; }
+.timeline { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 52px; list-style: none; }
+.timeline li { position: relative; padding: 32px 36px 0 0; border-top: 1px solid #89987880; }
+.timeline li:last-child { padding-right: 0; }
+.marker { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: var(--color-dark); top: -5px; left: 0; }
+.year { display: block; font-size: 44px; font-weight: 400; letter-spacing: -.05em; line-height: 1.2; }
+.timeline h3 { font-size: 17px; font-weight: 600; margin-top: 18px; }
+.timeline p { font-size: 14px; line-height: 1.9; margin-top: 12px; max-width: 300px; color: #555e55; }
+.chapter { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 72px; padding-block: 48px 104px; }
+.chapter .heading, .future .heading { margin-top: 16px; }
+.chapter .prose, .future .prose { margin-top: 26px; }
+.placeholder { aspect-ratio: 4 / 3; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 16px; background: #e9eadf; border: 1px solid #89987845; color: #555e55; text-align: center; padding: 24px; }
+.placeholder figcaption span { display: block; font-size: 14px; }
+.placeholder figcaption small { display: block; font-size: 11px; margin-top: 6px; }
+.inauguration { background: var(--color-dark); color: var(--color-bg); padding-block: 72px 88px; }
+.inauguration .eyebrow { color: var(--color-bg-soft); }
+.date { font-size: clamp(46px, 7.4vw, 92px); font-weight: 400; line-height: 1.12; letter-spacing: -.055em; margin-top: 18px; }
+.date span { color: var(--color-bg-soft); }
+.inaugurationGrid { display: grid; grid-template-columns: 1.15fr 1fr; align-items: center; gap: 64px; margin-top: 48px; }
+.placeholderDark { background: #2b312e; color: #e4e6d9; border-color: #e4e6c340; }
+.inauguration .prose { color: #e2e4db; }
+.closingLine { font-size: 23px; line-height: 1.55; margin-top: 30px; font-weight: 500; letter-spacing: -.025em; }
+.closingLine span { display: block; color: var(--color-bg-soft); }
+.future { display: grid; grid-template-columns: 1.25fr 1fr; align-items: center; gap: 104px; padding-block: 104px; }
+.futurePhoto { aspect-ratio: 4 / 5; border-radius: 100px 2px 2px 2px; }
+.signature { margin-top: 32px; font-size: 14px; font-weight: 600; line-height: 1.8; }
+.signature span { display: block; font-weight: 400; }
+.cta { display: inline-flex; align-items: center; justify-content: center; gap: 28px; min-height: 52px; margin-top: 28px; padding: 14px 24px; border-radius: 100px; background: var(--color-dark); color: var(--color-bg); font-size: 14px; font-weight: 500; transition: background .2s; }
+.cta:hover { background: var(--color-black); }
+.cta span { font-size: 19px; }
+.cta:focus-visible, .readLink:focus-visible { outline: 2px solid var(--color-dark); outline-offset: 5px; }
+@media (max-width: 900px) {
+  .container { width: calc(100% - 48px); }
+  .hero, .origin, .chapter, .inaugurationGrid { gap: 32px; }
+  .hero h1 { font-size: 68px; }
+  .heroLead { font-size: 18px; }
+  .future { gap: 48px; }
+}
+@media (max-width: 767px) {
+  .container { width: calc(100% - 40px); }
+  .hero { grid-template-columns: 1fr; padding-block: 40px 48px; gap: 28px; }
+  .heroCopy { padding-bottom: 0; }
+  .hero h1 { font-size: clamp(58px, 14vw, 80px); margin-top: 20px; }
+  .heroLead { margin-top: 22px; max-width: 360px; }
+  .readLink { margin-top: 18px; }
+  .heroPhoto { aspect-ratio: 4 / 3; border-top-right-radius: 60px; }
+  .origin { grid-template-columns: 1fr; gap: 18px; padding-block: 44px; }
+  .opening { font-size: 23px; }
+  .journey { padding-block: 24px 44px; }
+  .timeline { grid-template-columns: 1fr; margin-top: 32px; margin-left: 5px; }
+  .timeline li, .timeline li:last-child { border-top: 0; border-left: 1px solid #89987880; padding: 0 0 36px 28px; }
+  .timeline li:last-child { padding-bottom: 0; }
+  .marker { left: -5px; top: 15px; }
+  .year { font-size: 40px; }
+  .timeline h3 { margin-top: 12px; }
+  .timeline p { max-width: none; margin-top: 8px; }
+  .chapter { grid-template-columns: 1fr; padding-block: 24px 56px; gap: 28px; }
+  .inauguration { padding-block: 48px; }
+  .date { font-size: clamp(43px, 10vw, 70px); }
+  .date span { display: block; }
+  .inaugurationGrid { grid-template-columns: 1fr; margin-top: 28px; gap: 28px; }
+  .closingLine { font-size: 22px; }
+  .future { grid-template-columns: 1fr; padding-block: 56px; gap: 36px; }
+  .futurePhoto { aspect-ratio: 4 / 3; border-top-left-radius: 60px; }
+  .futurePhoto .photo { object-position: center 62%; }
+}
+@media (prefers-reduced-motion: reduce) { .cta { transition: none; } }
