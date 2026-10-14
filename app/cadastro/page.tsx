@@ -54,14 +54,14 @@ export default function CadastroPage() {
   return (
     <main className="bg-[var(--color-bg)] text-[var(--color-text)]">
       <section className="py-16 md:py-24">
-        <div className="mx-auto grid max-w-6xl overflow-hidden rounded-[2rem] bg-white shadow-sm lg:grid-cols-2">
+        <div className="mx-auto grid max-w-6xl overflow-hidden rounded-[2rem] bg-white shadow-sm lg:grid-cols-2 cn-card">
 
           <div className="bg-[var(--color-bg-soft)] p-8 md:p-12">
-            <span className="text-sm font-medium uppercase tracking-[0.25em] text-[var(--color-primary)]">
+            <span className="text-sm font-medium uppercase tracking-[0.25em] text-[var(--color-primary)] cn-brand-text">
               Casa Naturaleh
             </span>
 
-            <h1 className="mt-4 text-4xl font-semibold leading-tight md:text-5xl">
+            <h1 className="mt-4 text-4xl font-normal leading-tight md:text-5xl">
               Crie sua conta.
             </h1>
 
@@ -70,8 +70,8 @@ export default function CadastroPage() {
               um só lugar.
             </p>
 
-            <div className="mt-10 rounded-[1.5rem] bg-white/60 p-6">
-              <h2 className="font-semibold">
+            <div className="mt-10 rounded-[1.5rem] bg-white/60 p-6 cn-card">
+              <h2 className="font-normal">
                 Já possui uma conta?
               </h2>
 
@@ -81,7 +81,7 @@ export default function CadastroPage() {
 
               <Link
                 href="/login"
-                className="mt-5 inline-flex text-sm font-semibold text-[var(--color-primary)] transition hover:opacity-70"
+                className="mt-5 inline-flex text-sm font-semibold text-[var(--color-primary)] transition hover:opacity-70 cn-brand-text"
               >
                 Fazer login →
               </Link>
@@ -90,7 +90,7 @@ export default function CadastroPage() {
 
           <div className="p-8 md:p-12">
             <div className="mx-auto max-w-md">
-              <h2 className="text-2xl font-semibold">
+              <h2 className="text-2xl font-normal">
                 Cadastro
               </h2>
 
@@ -119,7 +119,7 @@ export default function CadastroPage() {
                       setNome(event.target.value)
                     }
                     required
-                    className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)]"
+                    className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)] cn-input"
                   />
                 </div>
 
@@ -140,7 +140,7 @@ export default function CadastroPage() {
                       setEmail(event.target.value)
                     }
                     required
-                    className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)]"
+                    className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)] cn-input"
                   />
                 </div>
 
@@ -160,7 +160,7 @@ export default function CadastroPage() {
                     onChange={(event) =>
                       setTelefone(event.target.value)
                     }
-                    className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)]"
+                    className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)] cn-input"
                   />
                 </div>
 
@@ -183,7 +183,7 @@ export default function CadastroPage() {
                       }
                       required
                       minLength={6}
-                      className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)]"
+                      className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)] cn-input"
                     />
                   </div>
 
@@ -205,7 +205,7 @@ export default function CadastroPage() {
                       }
                       required
                       minLength={6}
-                      className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)]"
+                      className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)] cn-input"
                     />
                   </div>
                 </div>
@@ -232,7 +232,7 @@ export default function CadastroPage() {
                 <button
                   type="submit"
                   disabled={carregando}
-                  className="w-full cursor-pointer rounded-full bg-[var(--color-primary)] px-6 py-4 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full cursor-pointer rounded-full bg-[var(--color-primary)] px-6 py-4 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 cn-button-primary"
                 >
                   {carregando
                     ? "Criando conta..."
@@ -244,7 +244,7 @@ export default function CadastroPage() {
                 Já tem uma conta?{" "}
                 <Link
                   href="/login"
-                  className="font-semibold text-[var(--color-primary)]"
+                  className="font-semibold text-[var(--color-primary)] cn-brand-text"
                 >
                   Entrar
                 </Link>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
+import localFont from "next/font/local";
 
 import "./globals.css";
 import Header from "./components/Header";
@@ -10,6 +11,15 @@ import { AuthProvider } from "./context/AuthContext";
 const montserrat = Montserrat({
   subsets: ["latin"],
   variable: "--font-montserrat",
+  display: "swap",
+});
+
+const blackMango = localFont({
+  src: "./fonts/BlackMango-Regular.ttf",
+  variable: "--font-black-mango",
+  weight: "400",
+  style: "normal",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -25,7 +35,7 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className={`${montserrat.variable} h-full antialiased`}
+      className={`${montserrat.variable} ${blackMango.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <AuthProvider>

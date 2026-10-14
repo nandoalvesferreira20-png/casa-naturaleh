@@ -77,7 +77,7 @@ export function ComprovanteWhatsApp({ pedidoId, pedido }: { pedidoId: string | n
     "Obrigado!",
   ].join("\n");
 
-  return <section className="rounded-[1.5rem] bg-white p-6 md:p-8">
+  return <section className="rounded-[1.5rem] bg-white p-6 md:p-8 cn-card">
     <p className="text-sm leading-6 text-[var(--color-text-light)]">
       {local ? "Fale com a loja para combinar a retirada. O pagamento será realizado no local." : "Após realizar o Pix, envie o comprovante pelo WhatsApp para agilizar a confirmação do seu pedido. O pagamento será conferido pela loja antes da aprovação. Anexe o comprovante na conversa."}
     </p>
@@ -85,7 +85,7 @@ export function ComprovanteWhatsApp({ pedidoId, pedido }: { pedidoId: string | n
       href={`https://wa.me/5511999572975?text=${encodeURIComponent(mensagem)}`}
       target="_blank"
       rel="noopener noreferrer"
-      className="mt-4 inline-flex w-full justify-center rounded-full bg-[var(--color-primary)] px-6 py-4 text-center text-sm font-semibold text-white transition hover:opacity-90 sm:w-auto"
+      className="mt-4 inline-flex w-full justify-center rounded-full bg-[var(--color-primary)] px-6 py-4 text-center text-sm font-semibold text-white transition hover:opacity-90 sm:w-auto cn-button-primary"
     >
       {local ? "Combinar retirada no WhatsApp" : "Já paguei — enviar comprovante no WhatsApp"}
     </a>
@@ -190,14 +190,14 @@ export default function PedidoConfirmadoClient() {
         <section className="py-16 md:py-24">
           <div className="mx-auto max-w-4xl px-6">
             {carregando ? (
-              <div className="rounded-[2rem] bg-white p-10 text-center">
+              <div className="rounded-[2rem] bg-white p-10 text-center cn-card">
                 <p className="text-[var(--color-text-light)]">
                   Carregando pedido...
                 </p>
               </div>
             ) : erro ? (
-              <div className="rounded-[2rem] bg-white p-10 text-center">
-                <h1 className="text-3xl font-semibold">
+              <div className="rounded-[2rem] bg-white p-10 text-center cn-card">
+                <h1 className="text-3xl font-normal">
                   Ops.
                 </h1>
 
@@ -207,7 +207,7 @@ export default function PedidoConfirmadoClient() {
 
                 <Link
                   href="/meus-pedidos"
-                  className="mt-8 inline-flex rounded-full bg-[var(--color-primary)] px-6 py-3 text-sm font-semibold text-white"
+                  className="mt-8 inline-flex rounded-full bg-[var(--color-primary)] px-6 py-3 text-sm font-semibold text-white cn-button-primary"
                 >
                   Ver meus pedidos
                 </Link>
@@ -220,11 +220,11 @@ export default function PedidoConfirmadoClient() {
                     ✓
                   </div>
 
-                  <span className="mt-6 block text-sm font-medium uppercase tracking-[0.25em] text-[var(--color-primary)]">
+                  <span className="mt-6 block text-sm font-medium uppercase tracking-[0.25em] text-[var(--color-primary)] cn-brand-text">
                     Pedido recebido
                   </span>
 
-                  <h1 className="mt-3 text-4xl font-semibold md:text-5xl">
+                  <h1 className="mt-3 text-4xl font-normal md:text-5xl">
                     Pedido realizado com sucesso
                   </h1>
 
@@ -241,8 +241,8 @@ export default function PedidoConfirmadoClient() {
                 </section>
 
                 {/* Resumo */}
-                <section className="rounded-[1.5rem] bg-white p-6 md:p-8">
-                  <h2 className="text-2xl font-semibold">
+                <section className="rounded-[1.5rem] bg-white p-6 md:p-8 cn-card">
+                  <h2 className="text-2xl font-normal">
                     Resumo do pedido
                   </h2>
 
@@ -344,12 +344,12 @@ export default function PedidoConfirmadoClient() {
 
                 {/* Pagamento e entrega */}
                 <section className="grid gap-6 md:grid-cols-2">
-                  <div className="rounded-[1.5rem] bg-white p-6">
-                    <span className="text-xs font-medium uppercase tracking-[0.2em] text-[var(--color-primary)]">
+                  <div className="rounded-[1.5rem] bg-white p-6 cn-card">
+                    <span className="text-xs font-medium uppercase tracking-[0.2em] text-[var(--color-primary)] cn-brand-text">
                       Pagamento
                     </span>
 
-                    <h2 className="mt-3 text-xl font-semibold">
+                    <h2 className="mt-3 text-xl font-normal">
                       {nomePagamento(
                         pedido.pagamento
                       )}
@@ -360,8 +360,8 @@ export default function PedidoConfirmadoClient() {
                     </p>
                   </div>
 
-                  <div className="rounded-[1.5rem] bg-white p-6">
-                    <span className="text-xs font-medium uppercase tracking-[0.2em] text-[var(--color-primary)]">
+                  <div className="rounded-[1.5rem] bg-white p-6 cn-card">
+                    <span className="text-xs font-medium uppercase tracking-[0.2em] text-[var(--color-primary)] cn-brand-text">
                       Recebimento
                     </span>
 
@@ -371,21 +371,21 @@ export default function PedidoConfirmadoClient() {
                 </section>
 
                 {pedido.payment?.provider === "pix_manual" && pedidoId && <ManualPixPanel orderId={pedidoId} total={pedido.total} orderStatus={pedido.status} payment={pedido.payment} />}
-                {pedido.payment?.provider === "manual" && pedido.payment.status === "pending" && pedido.status === "aguardando_pagamento" && <section className="rounded-[1.5rem] bg-white p-6 md:p-8"><h2 className="text-2xl font-semibold">Pagamento na retirada</h2><p className="mt-3 text-sm">Você poderá realizar o pagamento ao retirar seu pedido na loja.</p></section>}
+                {pedido.payment?.provider === "manual" && pedido.payment.status === "pending" && pedido.status === "aguardando_pagamento" && <section className="rounded-[1.5rem] bg-white p-6 md:p-8 cn-card"><h2 className="text-2xl font-normal">Pagamento na retirada</h2><p className="mt-3 text-sm">Você poderá realizar o pagamento ao retirar seu pedido na loja.</p></section>}
                 <ComprovanteWhatsApp pedidoId={pedidoId} pedido={pedido} />
                 {pedido.payment && pedido.payment.provider !== "pix_manual" && pedido.payment.provider !== "manual" && pedido.status === "aguardando_pagamento" && <p className="text-sm text-[var(--color-text-light)]">Este pedido foi criado com a integração de pagamento anterior. Entre em contato com a loja para conferir o pagamento.</p>}
 
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <Link
                     href="/meus-pedidos"
-                    className="flex-1 rounded-full bg-[var(--color-primary)] px-6 py-4 text-center text-sm font-semibold text-white transition hover:opacity-90"
+                    className="flex-1 rounded-full bg-[var(--color-primary)] px-6 py-4 text-center text-sm font-semibold text-white transition hover:opacity-90 cn-button-primary"
                   >
                     Ver meus pedidos
                   </Link>
 
                   <Link
                     href="/loja"
-                    className="flex-1 rounded-full border border-black/10 px-6 py-4 text-center text-sm font-semibold transition hover:bg-black/5"
+                    className="flex-1 rounded-full border border-black/10 px-6 py-4 text-center text-sm font-semibold transition hover:bg-black/5 cn-button-secondary"
                   >
                     Continuar comprando
                   </Link>

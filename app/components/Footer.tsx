@@ -4,7 +4,7 @@ import Link from "next/link";
 const endereco = "Av. Francisco Prestes Maia, 561 - Centro, São Bernardo do Campo - SP, 09770-000";
 const mapa = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(endereco)}`;
 const linkClass = "inline-flex min-h-11 items-center gap-2 rounded-sm text-sm leading-6 text-[var(--color-bg-soft)] transition-colors hover:text-[var(--color-white)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-bg-soft)] motion-reduce:transition-none";
-const headingClass = "text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-white)]";
+const headingClass = "cn-ui-title text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-white)]";
 const navegacao = [
   { href: "/", texto: "Início" },
   { href: "/nossa-historia", texto: "Nossa História" },
@@ -18,7 +18,7 @@ export default function Footer() {
   const ano = new Date().getFullYear();
 
   return (
-    <footer className="bg-[var(--color-dark)] text-[var(--color-white)]">
+    <footer className="cn-on-dark bg-[var(--color-dark)] text-[var(--color-white)]">
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-6 py-12 md:grid-cols-2 md:gap-12 lg:grid-cols-[1fr_0.8fr_1.1fr_1.2fr] lg:gap-8 lg:py-16">
         <div className="min-w-0">
           <Link href="/" aria-label="Casa Naturaleh — página inicial" className="inline-flex w-full max-w-64 items-center rounded-lg bg-[var(--color-bg)] px-4 py-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-bg-soft)]">
@@ -37,7 +37,7 @@ export default function Footer() {
         <section aria-labelledby="footer-atendimento" className="min-w-0">
           <h2 id="footer-atendimento" className={headingClass}>Atendimento</h2>
           <div className="mt-5 flex flex-col items-start gap-3">
-            <a href="https://wa.me/5511999572975" target="_blank" rel="noopener noreferrer" className={`${linkClass} rounded-full border border-[var(--color-primary)] px-5 py-2 hover:bg-[var(--color-bg-soft)] hover:text-[var(--color-dark)]`}>
+            <a href="https://wa.me/5511999572975" target="_blank" rel="noopener noreferrer" className={`${linkClass} rounded-full border border-[var(--color-primary)] px-5 py-2 hover:bg-[var(--color-bg-soft)] hover:text-[var(--color-dark)] cn-button-secondary`}>
               WhatsApp <span aria-hidden="true">↗</span><span className="sr-only"> (abre em nova aba)</span>
             </a>
             <p className="text-xs leading-6 text-[var(--color-bg-soft)]">(11) 99957-2975</p>

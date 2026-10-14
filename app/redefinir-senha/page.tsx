@@ -7,12 +7,12 @@ export default function RedefinirSenhaPage() {
       fallback={
         <main className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)]">
           <section className="flex min-h-[calc(100vh-120px)] items-center justify-center px-6 py-16">
-            <div className="w-full max-w-xl overflow-hidden rounded-[2rem] bg-white shadow-sm">
+            <div className="w-full max-w-xl overflow-hidden rounded-[2rem] bg-white shadow-sm cn-card">
               <div className="bg-[var(--color-bg-soft)] px-8 py-10 text-center md:px-12">
-                <span className="text-sm font-medium uppercase tracking-[0.25em] text-[var(--color-primary)]">
+                <span className="text-sm font-medium uppercase tracking-[0.25em] text-[var(--color-primary)] cn-brand-text">
                   Casa Naturaleh
                 </span>
-                <h1 className="mt-4 text-3xl font-semibold md:text-4xl">
+                <h1 className="mt-4 text-3xl font-normal md:text-4xl">
                   Redefinir sua senha
                 </h1>
                 <p className="mx-auto mt-4 max-w-md text-sm leading-6 text-[var(--color-text-light)]">

@@ -171,11 +171,11 @@ export default function MeusPedidosPage() {
       <main className="bg-[var(--color-bg)] text-[var(--color-text)]">
         <section className="border-b border-black/5">
           <div className="mx-auto max-w-7xl px-6 py-16 md:py-20">
-            <span className="text-sm font-medium uppercase tracking-[0.25em] text-[var(--color-primary)]">
+            <span className="text-sm font-medium uppercase tracking-[0.25em] text-[var(--color-primary)] cn-brand-text">
               Minha conta
             </span>
 
-            <h1 className="mt-3 text-4xl font-semibold md:text-6xl">
+            <h1 className="mt-3 text-4xl font-normal md:text-6xl">
               Meus pedidos
             </h1>
 
@@ -188,7 +188,7 @@ export default function MeusPedidosPage() {
         <section className="py-12">
           <div className="mx-auto grid max-w-7xl gap-8 px-6 lg:grid-cols-[280px_1fr]">
             {/* Menu lateral */}
-            <aside className="h-fit rounded-[1.5rem] bg-white p-4">
+            <aside className="h-fit rounded-[1.5rem] bg-white p-4 cn-card">
               <nav className="flex flex-col gap-2">
                 <Link
                   href="/minha-conta"
@@ -218,7 +218,7 @@ export default function MeusPedidosPage() {
             <div>
               <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                  <h2 className="text-2xl font-semibold">
+                  <h2 className="text-2xl font-normal">
                     Histórico de pedidos
                   </h2>
 
@@ -235,7 +235,7 @@ export default function MeusPedidosPage() {
 
                 <Link
                   href="/loja"
-                  className="text-sm font-semibold text-[var(--color-primary)] transition hover:opacity-70"
+                  className="text-sm font-semibold text-[var(--color-primary)] transition hover:opacity-70 cn-brand-text"
                 >
                   Continuar comprando →
                 </Link>
@@ -248,13 +248,13 @@ export default function MeusPedidosPage() {
               )}
 
               {carregando ? (
-                <div className="rounded-[1.5rem] bg-white p-8 text-center">
+                <div className="rounded-[1.5rem] bg-white p-8 text-center cn-card">
                   <p className="text-[var(--color-text-light)]">
                     Carregando seus pedidos...
                   </p>
                 </div>
               ) : pedidos.length === 0 ? (
-                <div className="rounded-[1.5rem] bg-white p-8 text-center">
+                <div className="rounded-[1.5rem] bg-white p-8 text-center cn-card">
                   <h3 className="text-xl font-semibold">
                     Você ainda não fez nenhum pedido.
                   </h3>
@@ -265,7 +265,7 @@ export default function MeusPedidosPage() {
 
                   <Link
                     href="/loja"
-                    className="mt-6 inline-flex rounded-full bg-[var(--color-primary)] px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90"
+                    className="mt-6 inline-flex rounded-full bg-[var(--color-primary)] px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90 cn-button-primary"
                   >
                     Ir para a loja
                   </Link>
@@ -288,7 +288,7 @@ export default function MeusPedidosPage() {
                       return (
                         <article
                           key={pedido.id}
-                          className="rounded-[1.5rem] border border-black/5 bg-white p-6"
+                          className="rounded-[1.5rem] border border-black/5 bg-white p-6 cn-card"
                         >
                           <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
                             <div>
@@ -352,7 +352,7 @@ export default function MeusPedidosPage() {
 
                               <Link
                                 href={`/pedido-confirmado?id=${pedido.id}`}
-                                className="rounded-full border border-black/10 px-5 py-2.5 text-sm font-semibold transition hover:bg-black/5"
+                                className="rounded-full border border-black/10 px-5 py-2.5 text-sm font-semibold transition hover:bg-black/5 cn-button-secondary"
                               >
                                 Ver detalhes
                               </Link>

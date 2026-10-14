@@ -114,7 +114,7 @@ export default function ProductActions({
           type="button"
           onClick={handleAdicionarAoCarrinho}
           disabled={!estoqueDisponivel || limiteAtingido}
-          className="mt-6 w-full cursor-pointer rounded-full bg-[var(--color-primary)] px-6 py-4 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+          className="mt-6 w-full cursor-pointer rounded-full bg-[var(--color-primary)] px-6 py-4 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto cn-button-primary"
         >
           {estoqueDisponivel > 0 ? "Adicionar ao carrinho" : "Produto indisponível"}
         </button>
@@ -126,18 +126,18 @@ export default function ProductActions({
           onClick={fecharModal}
         >
           <div
-            className="w-full max-w-md rounded-[2rem] bg-white p-7 shadow-xl"
+            className="w-full max-w-md rounded-[2rem] bg-white p-7 shadow-xl cn-card"
             onClick={(event) =>
               event.stopPropagation()
             }
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <span className="text-sm font-medium uppercase tracking-[0.2em] text-[var(--color-primary)]">
+                <span className="text-sm font-medium uppercase tracking-[0.2em] text-[var(--color-primary)] cn-brand-text">
                   Carrinho
                 </span>
 
-                <h2 className="mt-2 text-2xl font-semibold">
+                <h2 className="mt-2 text-2xl font-normal">
                   Produto adicionado ✓
                 </h2>
               </div>
@@ -193,7 +193,7 @@ export default function ProductActions({
             <div className="mt-6 flex flex-col gap-3">
               <Link
                 href="/carrinho"
-                className="rounded-full bg-[var(--color-primary)] px-6 py-3.5 text-center text-sm font-semibold text-white transition hover:opacity-90"
+                className="rounded-full bg-[var(--color-primary)] px-6 py-3.5 text-center text-sm font-semibold text-white transition hover:opacity-90 cn-button-primary"
               >
                 Ir para o carrinho
               </Link>
@@ -201,7 +201,7 @@ export default function ProductActions({
               <button
                 type="button"
                 onClick={fecharModal}
-                className="cursor-pointer rounded-full border border-black/10 px-6 py-3.5 text-sm font-semibold transition hover:bg-black/5"
+                className="cursor-pointer rounded-full border border-black/10 px-6 py-3.5 text-sm font-semibold transition hover:bg-black/5 cn-button-secondary"
               >
                 Continuar comprando
               </button>

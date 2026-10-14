@@ -307,14 +307,14 @@ export default function AdminPage() {
 
   return (
     <AdminRoute>
-      <main className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)]">
+      <main className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] cn-admin">
         <section className="border-b border-black/5">
           <div className="mx-auto max-w-7xl px-6 py-14">
-            <span className="text-sm font-medium uppercase tracking-[0.25em] text-[var(--color-primary)]">
+            <span className="text-sm font-medium uppercase tracking-[0.25em] text-[var(--color-primary)] cn-brand-text">
               Administração
             </span>
 
-            <h1 className="mt-3 text-4xl font-semibold md:text-5xl">
+            <h1 className="mt-3 text-4xl font-normal md:text-5xl">
               Pedidos
             </h1>
 
@@ -331,7 +331,7 @@ export default function AdminPage() {
           <div className="mx-auto max-w-7xl px-6">
             {/* Dashboard */}
             <div className="mb-10 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-              <div className="rounded-[1.5rem] bg-white p-6">
+              <div className="rounded-[1.5rem] bg-white p-6 cn-card">
                 <span className="text-xs font-medium uppercase tracking-[0.15em] text-[var(--color-text-light)]">
                   Total de pedidos
                 </span>
@@ -347,7 +347,7 @@ export default function AdminPage() {
                 </p>
               </div>
 
-              <div className="rounded-[1.5rem] bg-white p-6">
+              <div className="rounded-[1.5rem] bg-white p-6 cn-card">
                 <span className="text-xs font-medium uppercase tracking-[0.15em] text-[var(--color-text-light)]">
                   Valor em pedidos
                 </span>
@@ -370,7 +370,7 @@ export default function AdminPage() {
               </div>
 
               <div className="rounded-[1.5rem] bg-[var(--color-bg-soft)] p-6">
-                <span className="text-xs font-medium uppercase tracking-[0.15em] text-[var(--color-primary)]">
+                <span className="text-xs font-medium uppercase tracking-[0.15em] text-[var(--color-primary)] cn-brand-text">
                   Aguardando pagamento
                 </span>
 
@@ -405,7 +405,7 @@ export default function AdminPage() {
             {/* Cabeçalho dos pedidos */}
             <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
-                <h2 className="text-2xl font-semibold">
+                <h2 className="text-2xl font-normal">
                   Pedidos recentes
                 </h2>
 
@@ -433,7 +433,7 @@ export default function AdminPage() {
                       event.target.value
                     )
                   }
-                  className="mt-2 w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none md:w-[240px]"
+                  className="mt-2 w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none md:w-[240px] cn-input"
                 >
                   <option value="todos">
                     Todos
@@ -460,11 +460,11 @@ export default function AdminPage() {
             )}
 
             {carregando ? (
-              <div className="rounded-[1.5rem] bg-white p-8 text-center">
+              <div className="rounded-[1.5rem] bg-white p-8 text-center cn-card">
                 Carregando pedidos...
               </div>
             ) : pedidosFiltrados.length === 0 ? (
-              <div className="rounded-[1.5rem] bg-white p-8 text-center">
+              <div className="rounded-[1.5rem] bg-white p-8 text-center cn-card">
                 Nenhum pedido encontrado.
               </div>
             ) : (
@@ -473,7 +473,7 @@ export default function AdminPage() {
                   (pedido) => (
                     <article
                       key={pedido.id}
-                      className="rounded-[1.5rem] bg-white p-6"
+                      className="rounded-[1.5rem] bg-white p-6 cn-card"
                     >
                       <div className="flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
                         <div>
@@ -559,7 +559,7 @@ export default function AdminPage() {
                                 event.target.value
                               )
                             }
-                            className="rounded-xl border border-black/10 bg-[var(--color-bg)] px-4 py-2.5 text-sm outline-none disabled:opacity-50"
+                            className="rounded-xl border border-black/10 bg-[var(--color-bg)] px-4 py-2.5 text-sm outline-none disabled:opacity-50 cn-input"
                           >
                             {statusDisponiveis.map(
                               (status) => (
@@ -586,7 +586,7 @@ export default function AdminPage() {
                                 pedido
                               )
                             }
-                            className="cursor-pointer rounded-full border border-black/10 px-5 py-2.5 text-sm font-semibold transition hover:bg-black/5"
+                            className="cursor-pointer rounded-full border border-black/10 px-5 py-2.5 text-sm font-semibold transition hover:bg-black/5 cn-button-secondary"
                           >
                             Ver detalhes
                           </button>
@@ -609,18 +609,18 @@ export default function AdminPage() {
           }
         >
           <div
-            className="max-h-full w-full max-w-2xl overflow-y-auto rounded-[2rem] bg-white p-7 shadow-xl"
+            className="max-h-full w-full max-w-2xl overflow-y-auto rounded-[2rem] bg-white p-7 shadow-xl cn-card"
             onClick={(event) =>
               event.stopPropagation()
             }
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <span className="text-sm font-medium uppercase tracking-[0.2em] text-[var(--color-primary)]">
+                <span className="text-sm font-medium uppercase tracking-[0.2em] text-[var(--color-primary)] cn-brand-text">
                   Pedido
                 </span>
 
-                <h2 className="mt-2 text-2xl font-semibold">
+                <h2 className="mt-2 text-2xl font-normal">
                   #{pedidoAberto.id}
                 </h2>
               </div>

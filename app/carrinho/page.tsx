@@ -110,11 +110,11 @@ export default function CarrinhoPage() {
     <main className="bg-[var(--color-bg)] text-[var(--color-text)]">
       <section className="border-b border-black/5">
         <div className="mx-auto max-w-7xl px-6 py-16 md:py-20">
-          <span className="text-sm font-medium uppercase tracking-[0.25em] text-[var(--color-primary)]">
+          <span className="text-sm font-medium uppercase tracking-[0.25em] text-[var(--color-primary)] cn-brand-text">
             Carrinho
           </span>
 
-          <h1 className="mt-3 text-4xl font-semibold md:text-6xl">
+          <h1 className="mt-3 text-4xl font-normal md:text-6xl">
             Seu carrinho
           </h1>
 
@@ -127,8 +127,8 @@ export default function CarrinhoPage() {
       <section className="py-12">
         <div className="mx-auto max-w-7xl px-6">
           {itens.length === 0 ? (
-            <div className="rounded-[2rem] bg-white p-10 text-center">
-              <h2 className="text-2xl font-semibold">
+            <div className="rounded-[2rem] bg-white p-10 text-center cn-card">
+              <h2 className="text-2xl font-normal">
                 Seu carrinho está vazio.
               </h2>
 
@@ -138,7 +138,7 @@ export default function CarrinhoPage() {
 
               <Link
                 href="/loja"
-                className="mt-6 inline-flex rounded-full bg-[var(--color-primary)] px-6 py-3 text-sm font-medium text-white transition hover:opacity-90"
+                className="mt-6 inline-flex rounded-full bg-[var(--color-primary)] px-6 py-3 text-sm font-medium text-white transition hover:opacity-90 cn-button-primary"
               >
                 Ir para a loja
               </Link>
@@ -152,7 +152,7 @@ export default function CarrinhoPage() {
                       key={
                         item.id
                       }
-                      className="grid gap-5 rounded-[1.5rem] border border-black/5 bg-white p-5 sm:grid-cols-[120px_1fr_auto] sm:items-center"
+                      className="grid gap-5 rounded-[1.5rem] border border-black/5 bg-white p-5 sm:grid-cols-[120px_1fr_auto] sm:items-center cn-card"
                     >
                       <div className="relative h-28 overflow-hidden rounded-2xl bg-[var(--color-bg-soft)]">
                         <Image
@@ -169,7 +169,7 @@ export default function CarrinhoPage() {
                       </div>
 
                       <div>
-                        <h2 className="text-lg font-semibold">
+                        <h2 className="text-lg font-normal">
                           {
                             item.nome
                           }
@@ -264,8 +264,8 @@ export default function CarrinhoPage() {
                 )}
               </div>
 
-              <aside className="h-fit rounded-[1.5rem] bg-white p-6 lg:sticky lg:top-6">
-                <h2 className="text-xl font-semibold">
+              <aside className="h-fit rounded-[1.5rem] bg-white p-6 lg:sticky lg:top-6 cn-card">
+                <h2 className="text-xl font-normal">
                   Resumo do pedido
                 </h2>
 
@@ -306,14 +306,14 @@ export default function CarrinhoPage() {
 
                 <Link
                   href="/checkout"
-                  className="mt-6 flex w-full justify-center rounded-full bg-[var(--color-primary)] px-6 py-4 text-sm font-semibold text-white transition hover:opacity-90"
+                  className="mt-6 flex w-full justify-center rounded-full bg-[var(--color-primary)] px-6 py-4 text-sm font-semibold text-white transition hover:opacity-90 cn-button-primary"
                 >
                   Ir para o checkout
                 </Link>
 
                 <Link
                   href="/loja"
-                  className="mt-3 flex w-full justify-center rounded-full border border-black/10 px-6 py-4 text-sm font-semibold transition hover:bg-black/5"
+                  className="mt-3 flex w-full justify-center rounded-full border border-black/10 px-6 py-4 text-sm font-semibold transition hover:bg-black/5 cn-button-secondary"
                 >
                   Continuar comprando
                 </Link>
@@ -326,11 +326,11 @@ export default function CarrinhoPage() {
               0 && (
               <section className="mt-20">
                 <div className="mb-8">
-                  <span className="text-sm font-medium uppercase tracking-[0.25em] text-[var(--color-primary)]">
+                  <span className="text-sm font-medium uppercase tracking-[0.25em] text-[var(--color-primary)] cn-brand-text">
                     Complete sua compra
                   </span>
 
-                  <h2 className="mt-3 text-3xl font-semibold md:text-4xl">
+                  <h2 className="mt-3 text-3xl font-normal md:text-4xl">
                     Você também pode gostar
                   </h2>
 

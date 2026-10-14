@@ -32,8 +32,8 @@ export default function ManualPixPanel({ orderId, total, orderStatus, payment }:
     } catch { setFeedback("Não foi possível copiar automaticamente. Selecione e copie o código abaixo."); }
   }
 
-  return <section className="rounded-[1.5rem] bg-white p-6 md:p-8">
-    <h2 className="text-2xl font-semibold">Pagamento via Pix</h2>
+  return <section className="rounded-[1.5rem] bg-white p-6 md:p-8 cn-card">
+    <h2 className="text-2xl font-normal">Pagamento via Pix</h2>
     <p className="mt-3 text-sm text-[var(--color-text-light)]">Pedido #{orderId}</p>
     <p className="mt-3 font-semibold">Valor: {total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</p>
     <p className="mt-3 text-sm" role="status">{orderPaymentLabel(payment, orderStatus)}</p>
@@ -42,8 +42,8 @@ export default function ManualPixPanel({ orderId, total, orderStatus, payment }:
       {qrError && <p role="alert" className="text-sm">Não foi possível desenhar o QR Code. Use o Pix copia e cola abaixo.</p>}
       <p className="break-all text-sm text-[var(--color-text-light)]">Referência Pix: {payment.txid}</p>
       <label htmlFor={`pix-${orderId}`} className="block text-sm font-semibold">Pix copia e cola</label>
-      <textarea id={`pix-${orderId}`} readOnly value={payload} rows={4} className="w-full rounded-xl border border-[var(--color-bg-soft)] p-3 text-sm" />
-      <button type="button" onClick={copyPix} className="rounded-full bg-[var(--color-primary)] px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90">Copiar código Pix</button>
+      <textarea id={`pix-${orderId}`} readOnly value={payload} rows={4} className="w-full rounded-xl border border-[var(--color-bg-soft)] p-3 text-sm cn-input" />
+      <button type="button" onClick={copyPix} className="rounded-full bg-[var(--color-primary)] px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90 cn-button-primary">Copiar código Pix</button>
       {feedback && <p role="status" className="text-sm">{feedback}</p>}
       <p className="text-sm text-[var(--color-text-light)]">Após realizar o pagamento, aguarde a confirmação.</p>
     </div> : pending ? <p className="mt-4 text-sm">Dados Pix indisponíveis neste pedido. Entre em contato com a loja.</p> : null}

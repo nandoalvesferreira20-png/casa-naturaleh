@@ -722,11 +722,11 @@ export default function MinhaContaPage() {
         {/* Cabeçalho */}
         <section className="border-b border-black/5">
           <div className="mx-auto max-w-7xl px-6 py-16 md:py-20">
-            <span className="text-sm font-medium uppercase tracking-[0.25em] text-[var(--color-primary)]">
+            <span className="text-sm font-medium uppercase tracking-[0.25em] text-[var(--color-primary)] cn-brand-text">
               Minha conta
             </span>
 
-            <h1 className="mt-3 text-4xl font-semibold md:text-6xl">
+            <h1 className="mt-3 text-4xl font-normal md:text-6xl">
               Olá, {nome}
             </h1>
 
@@ -741,7 +741,7 @@ export default function MinhaContaPage() {
         <section className="py-12">
           <div className="mx-auto grid max-w-7xl gap-8 px-6 lg:grid-cols-[280px_1fr]">
             {/* Menu lateral */}
-            <aside className="h-fit rounded-[1.5rem] bg-white p-4">
+            <aside className="h-fit rounded-[1.5rem] bg-white p-4 cn-card">
               <nav className="flex flex-col gap-2">
                 <Link
                   href="/minha-conta"
@@ -769,10 +769,10 @@ export default function MinhaContaPage() {
 
             <div className="space-y-8">
               {/* Dados pessoais */}
-              <section className="rounded-[1.5rem] bg-white p-6 md:p-8">
+              <section className="rounded-[1.5rem] bg-white p-6 md:p-8 cn-card">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <h2 className="text-2xl font-semibold">
+                    <h2 className="text-2xl font-normal">
                       Dados pessoais
                     </h2>
 
@@ -789,7 +789,7 @@ export default function MinhaContaPage() {
                       onClick={() =>
                         setEditando(true)
                       }
-                      className="cursor-pointer text-sm font-semibold text-[var(--color-primary)] transition hover:opacity-70"
+                      className="cursor-pointer text-sm font-semibold text-[var(--color-primary)] transition hover:opacity-70 cn-brand-text"
                     >
                       Editar dados
                     </button>
@@ -825,7 +825,7 @@ export default function MinhaContaPage() {
                             event.target.value
                           )
                         }
-                        className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)]"
+                        className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)] cn-input"
                       />
                     </div>
 
@@ -847,7 +847,7 @@ export default function MinhaContaPage() {
                           )
                         }
                         placeholder="(00) 00000-0000"
-                        className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)]"
+                        className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)] cn-input"
                       />
                     </div>
 
@@ -873,7 +873,7 @@ export default function MinhaContaPage() {
                         handleSalvarDados
                       }
                       disabled={salvando}
-                      className="cursor-pointer rounded-full bg-[var(--color-primary)] px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="cursor-pointer rounded-full bg-[var(--color-primary)] px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 cn-button-primary"
                     >
                       {salvando
                         ? "Salvando..."
@@ -937,7 +937,7 @@ export default function MinhaContaPage() {
                             setErroSenha("");
                             setSucessoSenha("");
                           }}
-                          className="mt-2 block cursor-pointer font-medium text-[var(--color-primary)] transition hover:opacity-70"
+                          className="mt-2 block cursor-pointer font-medium text-[var(--color-primary)] transition hover:opacity-70 cn-brand-text"
                         >
                           Alterar senha
                         </button>
@@ -998,7 +998,7 @@ export default function MinhaContaPage() {
                           }
                           autoComplete="current-password"
                           placeholder="Digite sua senha atual"
-                          className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)]"
+                          className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)] cn-input"
                         />
                       </div>
 
@@ -1025,7 +1025,7 @@ export default function MinhaContaPage() {
                             }
                             autoComplete="new-password"
                             placeholder="Mínimo de 6 caracteres"
-                            className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)]"
+                            className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)] cn-input"
                           />
                         </div>
 
@@ -1053,7 +1053,7 @@ export default function MinhaContaPage() {
                             }
                             autoComplete="new-password"
                             placeholder="Digite novamente"
-                            className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)]"
+                            className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)] cn-input"
                           />
                         </div>
                       </div>
@@ -1078,7 +1078,7 @@ export default function MinhaContaPage() {
                         disabled={
                           salvandoSenha
                         }
-                        className="cursor-pointer rounded-full bg-[var(--color-primary)] px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="cursor-pointer rounded-full bg-[var(--color-primary)] px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 cn-button-primary"
                       >
                         {salvandoSenha
                           ? "Alterando..."
@@ -1090,10 +1090,10 @@ export default function MinhaContaPage() {
               </section>
 
               {/* Endereço */}
-              <section className="rounded-[1.5rem] bg-white p-6 md:p-8">
+              <section className="rounded-[1.5rem] bg-white p-6 md:p-8 cn-card">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <h2 className="text-2xl font-semibold">
+                    <h2 className="text-2xl font-normal">
                       Endereço de entrega
                     </h2>
 
@@ -1110,7 +1110,7 @@ export default function MinhaContaPage() {
                       onClick={
                         carregarEnderecoNoFormulario
                       }
-                      className="cursor-pointer text-sm font-semibold text-[var(--color-primary)] transition hover:opacity-70"
+                      className="cursor-pointer text-sm font-semibold text-[var(--color-primary)] transition hover:opacity-70 cn-brand-text"
                     >
                       {possuiEndereco
                         ? "Editar endereço"
@@ -1154,7 +1154,7 @@ export default function MinhaContaPage() {
                           onBlur={buscarCep}
                           placeholder="00000-000"
                           maxLength={9}
-                          className="w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 pr-28 outline-none transition focus:border-[var(--color-primary)]"
+                          className="w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 pr-28 outline-none transition focus:border-[var(--color-primary)] cn-input"
                         />
 
                         {buscandoCep && (
@@ -1165,7 +1165,7 @@ export default function MinhaContaPage() {
 
                         {!buscandoCep &&
                           cepEncontrado && (
-                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-medium text-[var(--color-primary)]">
+                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-medium text-[var(--color-primary)] cn-brand-text">
                               Encontrado ✓
                             </span>
                           )}
@@ -1191,7 +1191,7 @@ export default function MinhaContaPage() {
                           )
                         }
                         placeholder="Rua, avenida, estrada..."
-                        className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)]"
+                        className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)] cn-input"
                       />
                     </div>
 
@@ -1216,7 +1216,7 @@ export default function MinhaContaPage() {
                             )
                           }
                           placeholder="123"
-                          className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)]"
+                          className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)] cn-input"
                         />
                       </div>
 
@@ -1239,7 +1239,7 @@ export default function MinhaContaPage() {
                             )
                           }
                           placeholder="Apartamento, bloco..."
-                          className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)]"
+                          className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)] cn-input"
                         />
                       </div>
                     </div>
@@ -1263,7 +1263,7 @@ export default function MinhaContaPage() {
                           )
                         }
                         placeholder="Seu bairro"
-                        className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)]"
+                        className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)] cn-input"
                       />
                     </div>
 
@@ -1291,7 +1291,7 @@ export default function MinhaContaPage() {
                             cepEncontrado
                           }
                           placeholder="Sua cidade"
-                          className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-60"
+                          className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-60 cn-input"
                         />
                       </div>
 
@@ -1317,7 +1317,7 @@ export default function MinhaContaPage() {
                           }
                           placeholder="SP"
                           maxLength={2}
-                          className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 uppercase outline-none transition focus:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-60"
+                          className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 uppercase outline-none transition focus:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-60 cn-input"
                         />
                       </div>
                     </div>
@@ -1337,7 +1337,7 @@ export default function MinhaContaPage() {
                         salvandoEndereco ||
                         buscandoCep
                       }
-                      className="cursor-pointer rounded-full bg-[var(--color-primary)] px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="cursor-pointer rounded-full bg-[var(--color-primary)] px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 cn-button-primary"
                     >
                       {salvandoEndereco
                         ? "Salvando..."
@@ -1416,11 +1416,11 @@ export default function MinhaContaPage() {
                   href="/meus-pedidos"
                   className="rounded-[1.5rem] bg-[var(--color-bg-soft)] p-6 transition hover:-translate-y-1"
                 >
-                  <span className="text-sm font-medium uppercase tracking-[0.15em] text-[var(--color-primary)]">
+                  <span className="text-sm font-medium uppercase tracking-[0.15em] text-[var(--color-primary)] cn-brand-text">
                     Pedidos
                   </span>
 
-                  <h2 className="mt-3 text-xl font-semibold">
+                  <h2 className="mt-3 text-xl font-normal">
                     Acompanhar minhas
                     compras
                   </h2>
@@ -1431,7 +1431,7 @@ export default function MinhaContaPage() {
                     status de cada compra.
                   </p>
 
-                  <span className="mt-5 inline-block text-sm font-semibold text-[var(--color-primary)]">
+                  <span className="mt-5 inline-block text-sm font-semibold text-[var(--color-primary)] cn-brand-text">
                     Ver pedidos →
                   </span>
                 </Link>
@@ -1444,7 +1444,7 @@ export default function MinhaContaPage() {
                     Casa Naturaleh
                   </span>
 
-                  <h2 className="mt-3 text-xl font-semibold">
+                  <h2 className="mt-3 text-xl font-normal">
                     Continuar comprando
                   </h2>
 

@@ -48,8 +48,8 @@ export default function PaymentPanel({ orderId }: { orderId: string }) {
     } finally { submitting.current = false; setBusy(false); }
   }, [request]);
   const presentation = session?.presentation;
-  return <section className="rounded-[1.5rem] bg-white p-6 md:p-8" aria-busy={busy}>
-    <h2 className="text-2xl font-semibold">Pagamento</h2>
+  return <section className="rounded-[1.5rem] bg-white p-6 md:p-8 cn-card" aria-busy={busy}>
+    <h2 className="text-2xl font-normal">Pagamento</h2>
     <p className="mt-3 text-sm text-[var(--color-text-light)]" role="status">
       {busy ? "Processando pagamento..." : session ? paymentLabels[session.status] : "Preparando pagamento..."}
     </p>
@@ -67,13 +67,13 @@ export default function PaymentPanel({ orderId }: { orderId: string }) {
       </div>}
       {presentation?.qrCode && <>
         <label htmlFor={`pix-${orderId}`} className="block text-sm font-semibold">Código Pix copia e cola</label>
-        <textarea id={`pix-${orderId}`} readOnly value={presentation.qrCode} className="w-full rounded-xl border border-[var(--color-bg-soft)] p-3 text-sm" />
-        <button type="button" onClick={async () => { try { await navigator.clipboard.writeText(presentation.qrCode!); setCopied(true); } catch { setError("Selecione e copie o código Pix manualmente."); } }} className="rounded-full bg-[var(--color-primary)] px-5 py-3 text-sm text-white">{copied ? "Código copiado" : "Copiar código Pix"}</button>
+        <textarea id={`pix-${orderId}`} readOnly value={presentation.qrCode} className="w-full rounded-xl border border-[var(--color-bg-soft)] p-3 text-sm cn-input" />
+        <button type="button" onClick={async () => { try { await navigator.clipboard.writeText(presentation.qrCode!); setCopied(true); } catch { setError("Selecione e copie o código Pix manualmente."); } }} className="rounded-full bg-[var(--color-primary)] px-5 py-3 text-sm text-white cn-button-primary">{copied ? "Código copiado" : "Copiar código Pix"}</button>
       </>}
       {presentation?.barcode && <p className="break-all text-sm">Código de barras: {presentation.barcode}</p>}
       {presentation?.ticketUrl && <a href={presentation.ticketUrl} target="_blank" rel="noopener noreferrer" className="block text-sm font-semibold underline">{session.method === "boleto" ? "Abrir boleto" : "Abrir instruções de pagamento"}</a>}
       {presentation?.expiresAt && <p className="text-sm">Vencimento: {new Date(presentation.expiresAt).toLocaleString("pt-BR")}</p>}
     </div>}
-    <button type="button" disabled={busy} onClick={() => void refresh()} className="mt-5 rounded-full border border-[var(--color-bg-soft)] px-5 py-3 text-sm font-semibold disabled:opacity-50">Consultar status</button>
+    <button type="button" disabled={busy} onClick={() => void refresh()} className="mt-5 rounded-full border border-[var(--color-bg-soft)] px-5 py-3 text-sm font-semibold disabled:opacity-50 cn-button-secondary">Consultar status</button>
   </section>;
 }

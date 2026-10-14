@@ -103,11 +103,11 @@ export default async function ProdutoPage({
 
           {/* Informações do produto */}
           <div className="flex flex-col justify-center">
-            <span className="text-sm font-medium uppercase tracking-[0.2em] text-[var(--color-primary)]">
+            <span className="text-sm font-medium uppercase tracking-[0.2em] text-[var(--color-primary)] cn-brand-text">
               {produtoAtual.categoria}
             </span>
 
-            <h1 className="mt-3 text-4xl font-semibold leading-tight md:text-5xl">
+            <h1 className="mt-3 text-4xl font-normal leading-tight md:text-5xl">
               {produtoAtual.nome}
             </h1>
 
@@ -138,7 +138,7 @@ export default async function ProdutoPage({
 
             {/* Benefícios */}
             <div className="mt-10 grid gap-4 border-t border-black/10 pt-8 sm:grid-cols-3">
-              <div className="rounded-[1.25rem] bg-white p-4">
+              <div className="rounded-[1.25rem] bg-white p-4 cn-card">
                 <h3 className="text-sm font-semibold">
                   Compra segura
                 </h3>
@@ -148,7 +148,7 @@ export default async function ProdutoPage({
                 </p>
               </div>
 
-              <div className="rounded-[1.25rem] bg-white p-4">
+              <div className="rounded-[1.25rem] bg-white p-4 cn-card">
                 <h3 className="text-sm font-semibold">
                   Produto selecionado
                 </h3>
@@ -158,7 +158,7 @@ export default async function ProdutoPage({
                 </p>
               </div>
 
-              <div className="rounded-[1.25rem] bg-white p-4">
+              <div className="rounded-[1.25rem] bg-white p-4 cn-card">
                 <h3 className="text-sm font-semibold">
                   Entrega
                 </h3>
@@ -171,7 +171,7 @@ export default async function ProdutoPage({
 
             {/* Informações adicionais */}
             <div className="mt-8 rounded-[1.5rem] bg-[var(--color-bg-soft)] p-6">
-              <h2 className="text-lg font-semibold">
+              <h2 className="text-lg font-normal">
                 Informações do produto
               </h2>
 
@@ -205,11 +205,11 @@ export default async function ProdutoPage({
         <section className="border-t border-black/5 bg-white py-20">
           <div className="mx-auto max-w-7xl px-6">
             <div className="mb-10">
-              <span className="text-sm font-medium uppercase tracking-[0.25em] text-[var(--color-primary)]">
+              <span className="text-sm font-medium uppercase tracking-[0.25em] text-[var(--color-primary)] cn-brand-text">
                 Continue explorando
               </span>
 
-              <h2 className="mt-3 text-3xl font-semibold md:text-4xl">
+              <h2 className="mt-3 text-3xl font-normal md:text-4xl">
                 Você também pode gostar
               </h2>
 

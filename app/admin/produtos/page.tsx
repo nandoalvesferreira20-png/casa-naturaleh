@@ -10,6 +10,7 @@ import {
 import { LIMITE_CSV, LIMITE_LOTE, formatarEstoqueImportacao, type LinhaImportacao, type ResultadoImportacao } from "../../lib/importacao-produtos";
 import { CATEGORIAS_OFICIAIS } from "../../lib/categorias-importacao";
 import { aplicarCategoriaManual, type EdicaoCategoria } from "../../lib/revisao-categorias";
+import { calcularValorEstoqueProduto } from "../../lib/valor-estoque";
 
 import AdminRoute from "../../components/AdminRoute";
 import { useAuth } from "../../context/AuthContext";
@@ -165,7 +166,7 @@ function ImportacaoProdutosModal({ obterToken, onConcluir, onFechar }: {
       className="fixed inset-0 m-auto max-h-[90vh] w-[calc(100%-3rem)] max-w-5xl overflow-y-auto rounded-[2rem] bg-[var(--color-white)] p-7 text-[var(--color-text)] shadow-xl backdrop:bg-[var(--color-black)]/40 md:p-8">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 id="titulo-importacao" className="text-2xl font-semibold">Importar produtos em lote</h2>
+          <h2 id="titulo-importacao" className="text-2xl font-normal">Importar produtos em lote</h2>
           <p id="descricao-importacao" className="mt-3 text-sm text-[var(--color-text-light)]">Selecione CSV, XLS ou XLSX do ERP. As imagens por URL serão copiadas para nosso Storage após a confirmação.</p>
         </div>
         <button type="button" aria-label="Fechar importação" disabled={importando} onClick={resultado ? onConcluir : onFechar} className={botao}>×</button>
@@ -180,7 +181,7 @@ function ImportacaoProdutosModal({ obterToken, onConcluir, onFechar }: {
         </div>
       ) : (
         <div className="mt-7 space-y-5" aria-busy={importando || validando}>
-          <a href="/modelos/importacao-produtos.csv" download className="inline-block text-sm font-semibold text-[var(--color-primary)] underline">Baixar modelo CSV</a>
+          <a href="/modelos/importacao-produtos.csv" download className="inline-block text-sm font-semibold text-[var(--color-primary)] underline cn-brand-text">Baixar modelo CSV</a>
           <p className="text-xs text-[var(--color-text-light)]">Até 1.000 produtos e planilha de até 5 MB. Imagens de até 5 MB cada e 50 MB no total. O CSV antigo com imagens locais continua disponível. Produtos sem imagem podem ser importados.</p>
           <div className="grid gap-5 sm:grid-cols-2">
             <label className="text-sm font-medium">Selecionar planilha
@@ -191,7 +192,7 @@ function ImportacaoProdutosModal({ obterToken, onConcluir, onFechar }: {
             </label>
           </div>
           <label className="block text-sm">Categoria padrão para sugestões incertas (opcional)
-            <select value={categoriaPadrao} disabled={importando} onChange={e => { setCategoriaPadrao(e.target.value); requisicao.current?.abort(); setValidando(false); setLinhas([]); }} className="mt-2 block w-full rounded-xl border p-3">
+            <select value={categoriaPadrao} disabled={importando} onChange={e => { setCategoriaPadrao(e.target.value); requisicao.current?.abort(); setValidando(false); setLinhas([]); }} className="mt-2 block w-full rounded-xl border p-3 cn-input">
               <option value="">Revisar cada produto incerto</option>
               {CATEGORIAS_OFICIAIS.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
@@ -206,7 +207,7 @@ function ImportacaoProdutosModal({ obterToken, onConcluir, onFechar }: {
           {erro && <p role="alert" className="rounded-2xl bg-[var(--color-bg-soft)] p-4 text-sm">{erro}</p>}
           {linhas.length > 0 && <div className="flex flex-wrap items-center gap-3">
             <span>{selecionadas.length} selecionados · {linhas.filter(l => !l.categoriaManual && (l.classificacao?.confianca ?? 1) < .8).length} categorias para revisão</span>
-            <select aria-label="Categoria para edição em massa" value={categoriaMassa} disabled={importando || validando} onChange={e => setCategoriaMassa(e.target.value)} className="rounded-xl border p-3">
+            <select aria-label="Categoria para edição em massa" value={categoriaMassa} disabled={importando || validando} onChange={e => setCategoriaMassa(e.target.value)} className="rounded-xl border p-3 cn-input">
               <option value="">Definir categoria</option>{CATEGORIAS_OFICIAIS.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
             <button type="button" className={botao} disabled={!selecionadas.length || !categoriaMassa || importando || validando} onClick={() => definirCategoria(selecionadas, categoriaMassa)}>Aplicar aos selecionados</button>
@@ -217,7 +218,7 @@ function ImportacaoProdutosModal({ obterToken, onConcluir, onFechar }: {
               <tbody>{linhas.map(({ linha, produto, unidade, erros, avisos, sku, classificacao, categoriaManual, categoriaOriginal }) => <tr key={linha} className={erros.length ? "border-t border-[var(--color-bg-soft)] bg-[var(--color-bg-soft)]/40" : "border-t border-[var(--color-bg-soft)]"}>
                 <td className="px-4 py-3"><input type="checkbox" aria-label={`Selecionar ${produto.nome}`} disabled={importando || validando} checked={selecionadas.includes(linha)} onChange={e => setSelecionadas(atual => e.target.checked ? [...atual, linha] : atual.filter(id => id !== linha))} /></td>
                 <td className="px-4 py-3">{linha}</td><td className="px-4 py-3">{produto.nome}{sku && <p className="text-xs">SKU: {sku}</p>}</td>
-                <td className="min-w-56 px-4 py-3"><select aria-label={`Categoria de ${produto.nome}`} disabled={importando || validando} value={!categoriaManual && (classificacao?.confianca ?? 1) < .6 ? "" : produto.categoria} onChange={e => definirCategoria([linha], e.target.value)} className="w-full rounded-xl border p-2"><option value="" disabled>Escolha uma categoria</option>{CATEGORIAS_OFICIAIS.map(c => <option key={c} value={c}>{c}</option>)}</select><p className="text-xs">Original: {categoriaOriginal || "ausente"}</p>{classificacao && <p className="text-xs">Sugestão: {classificacao.categoria || "sem categoria"} · {classificacao.motivo}</p>}</td>
+                <td className="min-w-56 px-4 py-3"><select aria-label={`Categoria de ${produto.nome}`} disabled={importando || validando} value={!categoriaManual && (classificacao?.confianca ?? 1) < .6 ? "" : produto.categoria} onChange={e => definirCategoria([linha], e.target.value)} className="w-full rounded-xl border p-2 cn-input"><option value="" disabled>Escolha uma categoria</option>{CATEGORIAS_OFICIAIS.map(c => <option key={c} value={c}>{c}</option>)}</select><p className="text-xs">Original: {categoriaOriginal || "ausente"}</p>{classificacao && <p className="text-xs">Sugestão: {classificacao.categoria || "sem categoria"} · {classificacao.motivo}</p>}</td>
                 <td className="px-4 py-3">{classificacao ? `${Math.round(classificacao.confianca * 100)}%` : "—"}{!categoriaManual && classificacao && classificacao.confianca >= .6 && classificacao.confianca < .8 && <button type="button" disabled={importando || validando} className="mt-2 block underline" onClick={() => definirCategoria([linha], produto.categoria)}>Confirmar categoria</button>}</td>
                 <td className="whitespace-nowrap px-4 py-3">{produto.preco && Number.isFinite(Number(produto.preco)) ? Number(produto.preco).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : produto.preco || "—"}</td>
                 <td className="px-4 py-3">{formatarEstoqueImportacao(produto.estoque, unidade)}</td><td className="px-4 py-3">{produto.slug}</td><td className="break-all px-4 py-3">{erros.some(e => e.includes("URL de imagem")) ? "URL inválida" : produto.imagem ? "Imagem encontrada" : "Imagem ausente"}<span className="block text-xs">{produto.imagem}</span></td>
@@ -228,7 +229,7 @@ function ImportacaoProdutosModal({ obterToken, onConcluir, onFechar }: {
           <p className="text-sm text-[var(--color-text-light)]">Somente as linhas válidas serão importadas. Linhas com erro serão ignoradas. Os dados serão verificados novamente na confirmação.</p>
           {importando && <p role="status">Baixando e enviando imagens (até quatro por vez), depois cadastrando produtos. Aguarde e mantenha esta janela aberta.</p>}
           <div className="flex flex-wrap gap-3">
-            <button type="button" disabled={!validas || validando || importando} onClick={() => void importar()} className="cursor-pointer rounded-full bg-[var(--color-primary)] px-6 py-3.5 text-sm font-semibold text-[var(--color-white)] transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50">{importando ? "Importando..." : `Importar ${validas} produtos`}</button>
+            <button type="button" disabled={!validas || validando || importando} onClick={() => void importar()} className="cursor-pointer rounded-full bg-[var(--color-primary)] px-6 py-3.5 text-sm font-semibold text-[var(--color-white)] transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 cn-button-primary">{importando ? "Importando..." : `Importar ${validas} produtos`}</button>
             <button type="button" disabled={!csv || validando || importando} onClick={() => void validar(csv, imagens)} className={botao}>Validar novamente</button>
             <button type="button" disabled={importando} onClick={onFechar} className={botao}>Cancelar</button>
           </div>
@@ -1195,22 +1196,21 @@ export default function AdminProdutosPage() {
         produto
       ) =>
         total +
-        produto.preco *
-          produto.estoque,
+        calcularValorEstoqueProduto(produto),
       0
     );
 
   return (
     <AdminRoute>
-      <main className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)]">
+      <main className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] cn-admin">
         <section className="border-b border-black/5">
           <div className="mx-auto flex max-w-7xl flex-col gap-6 px-6 py-14 md:flex-row md:items-end md:justify-between">
             <div>
-              <span className="text-sm font-medium uppercase tracking-[0.25em] text-[var(--color-primary)]">
+              <span className="text-sm font-medium uppercase tracking-[0.25em] text-[var(--color-primary)] cn-brand-text">
                 Administração
               </span>
 
-              <h1 className="mt-3 text-4xl font-semibold md:text-5xl">
+              <h1 className="mt-3 text-4xl font-normal md:text-5xl">
                 Produtos
               </h1>
 
@@ -1228,14 +1228,14 @@ export default function AdminProdutosPage() {
               onClick={
                 abrirNovoProduto
               }
-              className="cursor-pointer rounded-full bg-[var(--color-primary)] px-6 py-3.5 text-sm font-semibold text-white transition hover:opacity-90"
+              className="cursor-pointer rounded-full bg-[var(--color-primary)] px-6 py-3.5 text-sm font-semibold text-white transition hover:opacity-90 cn-button-primary"
             >
               + Novo produto
             </button>
               <button
                 type="button"
                 onClick={() => setImportacaoAberta(true)}
-                className="cursor-pointer rounded-full border border-[var(--color-bg-soft)] px-6 py-3.5 text-sm font-semibold transition hover:bg-[var(--color-bg-soft)]"
+                className="cursor-pointer rounded-full border border-[var(--color-bg-soft)] px-6 py-3.5 text-sm font-semibold transition hover:bg-[var(--color-bg-soft)] cn-button-secondary"
               >
                 Importar em lote
               </button>
@@ -1246,7 +1246,7 @@ export default function AdminProdutosPage() {
         <section className="py-10">
           <div className="mx-auto max-w-7xl px-6">
             <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-              <div className="rounded-[1.5rem] bg-white p-6">
+              <div className="rounded-[1.5rem] bg-white p-6 cn-card">
                 <span className="text-xs font-medium uppercase tracking-[0.15em] text-[var(--color-text-light)]">
                   Produtos
                 </span>
@@ -1263,7 +1263,7 @@ export default function AdminProdutosPage() {
               </div>
 
               <div className="rounded-[1.5rem] bg-[var(--color-bg-soft)] p-6">
-                <span className="text-xs font-medium uppercase tracking-[0.15em] text-[var(--color-primary)]">
+                <span className="text-xs font-medium uppercase tracking-[0.15em] text-[var(--color-primary)] cn-brand-text">
                   Ativos
                 </span>
 
@@ -1278,7 +1278,7 @@ export default function AdminProdutosPage() {
                 </p>
               </div>
 
-              <div className="rounded-[1.5rem] bg-white p-6">
+              <div className="rounded-[1.5rem] bg-white p-6 cn-card">
                 <span className="text-xs font-medium uppercase tracking-[0.15em] text-[var(--color-text-light)]">
                   Estoque baixo
                 </span>
@@ -1339,7 +1339,7 @@ export default function AdminProdutosPage() {
                     )
                   }
                   placeholder="Nome, categoria ou slug..."
-                  className="mt-2 w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[var(--color-primary)]"
+                  className="mt-2 w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[var(--color-primary)] cn-input"
                 />
               </div>
 
@@ -1359,7 +1359,7 @@ export default function AdminProdutosPage() {
                       event.target.value
                     )
                   }
-                  className="mt-2 w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none md:w-[220px]"
+                  className="mt-2 w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none md:w-[220px] cn-input"
                 >
                   <option value="todos">
                     Todos
@@ -1388,13 +1388,13 @@ export default function AdminProdutosPage() {
 
             <div className="mt-8">
               {carregando ? (
-                <div className="rounded-[1.5rem] bg-white p-8 text-center">
+                <div className="rounded-[1.5rem] bg-white p-8 text-center cn-card">
                   Carregando produtos...
                 </div>
               ) : produtosFiltrados.length ===
                 0 ? (
-                <div className="rounded-[1.5rem] bg-white p-8 text-center">
-                  <h2 className="text-xl font-semibold">
+                <div className="rounded-[1.5rem] bg-white p-8 text-center cn-card">
+                  <h2 className="text-xl font-normal">
                     Nenhum produto
                     encontrado.
                   </h2>
@@ -1413,7 +1413,7 @@ export default function AdminProdutosPage() {
                         key={
                           produto.id
                         }
-                        className="rounded-[1.5rem] bg-white p-5 md:p-6"
+                        className="rounded-[1.5rem] bg-white p-5 md:p-6 cn-card"
                       >
                         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                           <div className="flex items-center gap-5">
@@ -1437,7 +1437,7 @@ export default function AdminProdutosPage() {
 
                             <div>
                               <div className="flex flex-wrap items-center gap-3">
-                                <h2 className="text-lg font-semibold">
+                                <h2 className="text-lg font-normal">
                                   {
                                     produto.nome
                                   }
@@ -1518,7 +1518,7 @@ export default function AdminProdutosPage() {
                                     produto
                                   )
                                 }
-                                className="cursor-pointer rounded-full border border-black/10 px-4 py-2.5 text-sm font-semibold transition hover:bg-black/5"
+                                className="cursor-pointer rounded-full border border-black/10 px-4 py-2.5 text-sm font-semibold transition hover:bg-black/5 cn-button-secondary"
                               >
                                 {produto.ativo
                                   ? "Desativar"
@@ -1532,7 +1532,7 @@ export default function AdminProdutosPage() {
                                     produto
                                   )
                                 }
-                                className="cursor-pointer rounded-full border border-black/10 px-4 py-2.5 text-sm font-semibold transition hover:bg-black/5"
+                                className="cursor-pointer rounded-full border border-black/10 px-4 py-2.5 text-sm font-semibold transition hover:bg-black/5 cn-button-secondary"
                               >
                                 Editar
                               </button>
@@ -1580,18 +1580,18 @@ export default function AdminProdutosPage() {
           }
         >
           <div
-            className="max-h-full w-full max-w-2xl overflow-y-auto rounded-[2rem] bg-white p-7 shadow-xl md:p-8"
+            className="max-h-full w-full max-w-2xl overflow-y-auto rounded-[2rem] bg-white p-7 shadow-xl md:p-8 cn-card"
             onClick={(event) =>
               event.stopPropagation()
             }
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <span className="text-sm font-medium uppercase tracking-[0.2em] text-[var(--color-primary)]">
+                <span className="text-sm font-medium uppercase tracking-[0.2em] text-[var(--color-primary)] cn-brand-text">
                   Produto
                 </span>
 
-                <h2 className="mt-2 text-2xl font-semibold">
+                <h2 className="mt-2 text-2xl font-normal">
                   {produtoEditando
                     ? "Editar produto"
                     : "Novo produto"}
@@ -1639,7 +1639,7 @@ export default function AdminProdutosPage() {
                     )
                   }
                   placeholder="Ex.: Creatina Monohidratada"
-                  className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)]"
+                  className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)] cn-input"
                 />
               </div>
 
@@ -1668,7 +1668,7 @@ export default function AdminProdutosPage() {
                     )
                   }
                   placeholder="creatina-monohidratada"
-                  className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none"
+                  className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none cn-input"
                 />
 
                 <p className="mt-2 text-xs text-[var(--color-text-light)]">
@@ -1702,7 +1702,7 @@ export default function AdminProdutosPage() {
                       )
                     }
                     placeholder="Suplementos"
-                    className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none"
+                    className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none cn-input"
                   />
                 </div>
 
@@ -1732,7 +1732,7 @@ export default function AdminProdutosPage() {
                       )
                     }
                     placeholder="89,90"
-                    className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none"
+                    className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none cn-input"
                   />
                 </div>
               </div>
@@ -1760,7 +1760,7 @@ export default function AdminProdutosPage() {
                     </p>
 
                     {arquivoImagem && (
-                      <p className="mt-2 text-xs font-medium text-[var(--color-primary)]">
+                      <p className="mt-2 text-xs font-medium text-[var(--color-primary)] cn-brand-text">
                         {
                           arquivoImagem.name
                         }
@@ -1828,7 +1828,7 @@ export default function AdminProdutosPage() {
                   }
                   rows={4}
                   placeholder="Descreva o produto..."
-                  className="mt-2 w-full resize-none rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none"
+                  className="mt-2 w-full resize-none rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none cn-input"
                 />
               </div>
 
@@ -1859,7 +1859,7 @@ export default function AdminProdutosPage() {
                       )
                     }
                     placeholder="10"
-                    className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none"
+                    className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none cn-input"
                   />
                 </div>
 
@@ -1905,7 +1905,7 @@ export default function AdminProdutosPage() {
                     salvando ||
                     enviandoImagem
                   }
-                  className="flex-1 cursor-pointer rounded-full bg-[var(--color-primary)] px-6 py-3.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex-1 cursor-pointer rounded-full bg-[var(--color-primary)] px-6 py-3.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 cn-button-primary"
                 >
                   {enviandoImagem
                     ? "Enviando imagem..."
@@ -1925,7 +1925,7 @@ export default function AdminProdutosPage() {
                     salvando ||
                     enviandoImagem
                   }
-                  className="cursor-pointer rounded-full border border-black/10 px-6 py-3.5 text-sm font-semibold transition hover:bg-black/5 disabled:opacity-50"
+                  className="cursor-pointer rounded-full border border-black/10 px-6 py-3.5 text-sm font-semibold transition hover:bg-black/5 disabled:opacity-50 cn-button-secondary"
                 >
                   Cancelar
                 </button>

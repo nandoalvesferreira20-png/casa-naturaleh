@@ -436,11 +436,11 @@ export default function CheckoutPage() {
       {/* Cabeçalho */}
       <section className="border-b border-black/5">
         <div className="mx-auto max-w-7xl px-6 py-16 md:py-20">
-          <span className="text-sm font-medium uppercase tracking-[0.25em] text-[var(--color-primary)]">
+          <span className="text-sm font-medium uppercase tracking-[0.25em] text-[var(--color-primary)] cn-brand-text">
             Checkout
           </span>
 
-          <h1 className="mt-3 text-4xl font-semibold md:text-6xl">
+          <h1 className="mt-3 text-4xl font-normal md:text-6xl">
             Finalize sua compra
           </h1>
 
@@ -449,7 +449,7 @@ export default function CheckoutPage() {
           </p>
 
           {user && (
-            <p className="mt-3 text-sm font-medium text-[var(--color-primary)]">
+            <p className="mt-3 text-sm font-medium text-[var(--color-primary)] cn-brand-text">
               {carregandoPerfil
                 ? "Carregando seus dados..."
                 : "Seus dados salvos foram preenchidos automaticamente."}
@@ -462,13 +462,13 @@ export default function CheckoutPage() {
         <div className="mx-auto grid max-w-7xl gap-10 px-6 lg:grid-cols-[1fr_400px]">
           <div className="space-y-8">
             {/* Identificação */}
-            <section className="rounded-[1.5rem] bg-white p-6 md:p-8">
+            <section className="rounded-[1.5rem] bg-white p-6 md:p-8 cn-card">
               <div className="mb-6">
-                <span className="text-sm font-medium uppercase tracking-[0.2em] text-[var(--color-primary)]">
+                <span className="text-sm font-medium uppercase tracking-[0.2em] text-[var(--color-primary)] cn-brand-text">
                   1. Identificação
                 </span>
 
-                <h2 className="mt-2 text-2xl font-semibold">
+                <h2 className="mt-2 text-2xl font-normal">
                   Seus dados
                 </h2>
               </div>
@@ -492,7 +492,7 @@ export default function CheckoutPage() {
                       )
                     }
                     placeholder="Seu nome completo"
-                    className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)]"
+                    className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)] cn-input"
                   />
                 </div>
 
@@ -514,7 +514,7 @@ export default function CheckoutPage() {
                       )
                     }
                     placeholder="seuemail@exemplo.com"
-                    className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)]"
+                    className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)] cn-input"
                   />
                 </div>
 
@@ -536,20 +536,20 @@ export default function CheckoutPage() {
                       )
                     }
                     placeholder="(00) 00000-0000"
-                    className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)]"
+                    className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)] cn-input"
                   />
                 </div>
               </div>
             </section>
 
             {/* Entrega */}
-            <section className="rounded-[1.5rem] bg-white p-6 md:p-8">
+            <section className="rounded-[1.5rem] bg-white p-6 md:p-8 cn-card">
               <div className="mb-6">
-                <span className="text-sm font-medium uppercase tracking-[0.2em] text-[var(--color-primary)]">
+                <span className="text-sm font-medium uppercase tracking-[0.2em] text-[var(--color-primary)] cn-brand-text">
                   2. Recebimento
                 </span>
 
-                <h2 className="mt-2 text-2xl font-semibold">
+                <h2 className="mt-2 text-2xl font-normal">
                   Forma de recebimento
                 </h2>
               </div>
@@ -592,7 +592,7 @@ export default function CheckoutPage() {
                       onBlur={buscarCep}
                       placeholder="00000-000"
                       maxLength={9}
-                      className="w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 pr-28 outline-none transition focus:border-[var(--color-primary)]"
+                      className="w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 pr-28 outline-none transition focus:border-[var(--color-primary)] cn-input"
                     />
 
                     {buscandoCep && (
@@ -603,7 +603,7 @@ export default function CheckoutPage() {
 
                     {!buscandoCep &&
                       cepEncontrado && (
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-medium text-[var(--color-primary)]">
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-medium text-[var(--color-primary)] cn-brand-text">
                           Encontrado ✓
                         </span>
                       )}
@@ -632,7 +632,7 @@ export default function CheckoutPage() {
                       cepEncontrado
                     }
                     placeholder="Sua cidade"
-                    className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-60"
+                    className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-60 cn-input"
                   />
                 </div>
 
@@ -655,7 +655,7 @@ export default function CheckoutPage() {
                       )
                     }
                     placeholder="Rua / Avenida"
-                    className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)]"
+                    className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)] cn-input"
                   />
                 </div>
 
@@ -678,7 +678,7 @@ export default function CheckoutPage() {
                       )
                     }
                     placeholder="123"
-                    className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)]"
+                    className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)] cn-input"
                   />
                 </div>
 
@@ -701,7 +701,7 @@ export default function CheckoutPage() {
                       )
                     }
                     placeholder="Apto, bloco..."
-                    className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)]"
+                    className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)] cn-input"
                   />
                 </div>
 
@@ -724,7 +724,7 @@ export default function CheckoutPage() {
                       )
                     }
                     placeholder="Seu bairro"
-                    className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)]"
+                    className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)] cn-input"
                   />
                 </div>
 
@@ -751,7 +751,7 @@ export default function CheckoutPage() {
                     }
                     placeholder="SP"
                     maxLength={2}
-                    className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 uppercase outline-none transition focus:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-60"
+                    className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 uppercase outline-none transition focus:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-60 cn-input"
                   />
                 </div>
               </div>
@@ -765,13 +765,13 @@ export default function CheckoutPage() {
             </section>
 
             {/* Pagamento */}
-            <section className="rounded-[1.5rem] bg-white p-6 md:p-8">
+            <section className="rounded-[1.5rem] bg-white p-6 md:p-8 cn-card">
               <div className="mb-6">
-                <span className="text-sm font-medium uppercase tracking-[0.2em] text-[var(--color-primary)]">
+                <span className="text-sm font-medium uppercase tracking-[0.2em] text-[var(--color-primary)] cn-brand-text">
                   3. Pagamento
                 </span>
 
-                <h2 className="mt-2 text-2xl font-semibold">
+                <h2 className="mt-2 text-2xl font-normal">
                   Forma de pagamento
                 </h2>
               </div>
@@ -815,8 +815,8 @@ export default function CheckoutPage() {
           </div>
 
           {/* Resumo */}
-          <aside className="h-fit rounded-[1.5rem] bg-white p-6 lg:sticky lg:top-6">
-            <h2 className="text-xl font-semibold">
+          <aside className="h-fit rounded-[1.5rem] bg-white p-6 lg:sticky lg:top-6 cn-card">
+            <h2 className="text-xl font-normal">
               Resumo da compra
             </h2>
 
@@ -928,7 +928,7 @@ export default function CheckoutPage() {
                 itens.length === 0 ||
                 finalizando
               }
-              className="mt-6 w-full cursor-pointer rounded-full bg-[var(--color-primary)] px-6 py-4 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+              className="mt-6 w-full cursor-pointer rounded-full bg-[var(--color-primary)] px-6 py-4 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40 cn-button-primary"
             >
               {finalizando
                 ? "Finalizando..."
@@ -937,7 +937,7 @@ export default function CheckoutPage() {
 
             <Link
               href="/carrinho"
-              className="mt-3 flex justify-center text-sm font-medium text-[var(--color-primary)]"
+              className="mt-3 flex justify-center text-sm font-medium text-[var(--color-primary)] cn-brand-text"
             >
               Voltar ao carrinho
             </Link>

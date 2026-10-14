@@ -177,13 +177,13 @@ export default function LoginPage() {
     <>
       <main className="bg-[var(--color-bg)] text-[var(--color-text)]">
         <section className="py-16 md:py-24">
-          <div className="mx-auto grid max-w-6xl overflow-hidden rounded-[2rem] bg-white shadow-sm lg:grid-cols-2">
+          <div className="mx-auto grid max-w-6xl overflow-hidden rounded-[2rem] bg-white shadow-sm lg:grid-cols-2 cn-card">
             <div className="bg-[var(--color-bg-soft)] p-8 md:p-12">
-              <span className="text-sm font-medium uppercase tracking-[0.25em] text-[var(--color-primary)]">
+              <span className="text-sm font-medium uppercase tracking-[0.25em] text-[var(--color-primary)] cn-brand-text">
                 Casa Naturaleh
               </span>
 
-              <h1 className="mt-4 text-4xl font-semibold leading-tight md:text-5xl">
+              <h1 className="mt-4 text-4xl font-normal leading-tight md:text-5xl">
                 Entre na sua conta.
               </h1>
 
@@ -192,8 +192,8 @@ export default function LoginPage() {
                 um só lugar.
               </p>
 
-              <div className="mt-10 rounded-[1.5rem] bg-white/60 p-6">
-                <h2 className="font-semibold">
+              <div className="mt-10 rounded-[1.5rem] bg-white/60 p-6 cn-card">
+                <h2 className="font-normal">
                   Ainda não tem uma conta?
                 </h2>
 
@@ -204,7 +204,7 @@ export default function LoginPage() {
 
                 <Link
                   href="/cadastro"
-                  className="mt-5 inline-flex text-sm font-semibold text-[var(--color-primary)] transition hover:opacity-70"
+                  className="mt-5 inline-flex text-sm font-semibold text-[var(--color-primary)] transition hover:opacity-70 cn-brand-text"
                 >
                   Criar minha conta →
                 </Link>
@@ -213,7 +213,7 @@ export default function LoginPage() {
 
             <div className="p-8 md:p-12">
               <div className="mx-auto max-w-md">
-                <h2 className="text-2xl font-semibold">
+                <h2 className="text-2xl font-normal">
                   Login
                 </h2>
 
@@ -227,7 +227,7 @@ export default function LoginPage() {
                     type="button"
                     onClick={handleGoogleLogin}
                     disabled={carregando}
-                    className="flex w-full cursor-pointer items-center justify-center gap-3 rounded-full border border-black/10 px-5 py-3.5 text-sm font-semibold transition hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex w-full cursor-pointer items-center justify-center gap-3 rounded-full border border-black/10 px-5 py-3.5 text-sm font-semibold transition hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-50 cn-button-secondary"
                   >
                     <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-sm font-bold">
                       G
@@ -239,7 +239,7 @@ export default function LoginPage() {
                   <button
                     type="button"
                     disabled={carregando}
-                    className="flex w-full cursor-pointer items-center justify-center gap-3 rounded-full border border-black/10 px-5 py-3.5 text-sm font-semibold transition hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex w-full cursor-pointer items-center justify-center gap-3 rounded-full border border-black/10 px-5 py-3.5 text-sm font-semibold transition hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-50 cn-button-secondary"
                   >
                     <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#1877F2] text-sm font-bold text-white">
                       f
@@ -251,7 +251,7 @@ export default function LoginPage() {
                   <button
                     type="button"
                     disabled={carregando}
-                    className="flex w-full cursor-pointer items-center justify-center gap-3 rounded-full border border-black/10 px-5 py-3.5 text-sm font-semibold transition hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex w-full cursor-pointer items-center justify-center gap-3 rounded-full border border-black/10 px-5 py-3.5 text-sm font-semibold transition hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-50 cn-button-secondary"
                   >
                     <span className="flex h-6 w-6 items-center justify-center text-lg">
                       
@@ -297,7 +297,7 @@ export default function LoginPage() {
                       }
                       required
                       autoComplete="email"
-                      className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)]"
+                      className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)] cn-input"
                     />
                   </div>
 
@@ -321,7 +321,7 @@ export default function LoginPage() {
                       }
                       required
                       autoComplete="current-password"
-                      className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)]"
+                      className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)] cn-input"
                     />
                   </div>
 
@@ -338,7 +338,7 @@ export default function LoginPage() {
                     <button
                       type="button"
                       onClick={abrirRecuperacao}
-                      className="cursor-pointer text-sm font-medium text-[var(--color-primary)] transition hover:opacity-70"
+                      className="cursor-pointer text-sm font-medium text-[var(--color-primary)] transition hover:opacity-70 cn-brand-text"
                     >
                       Esqueci minha senha
                     </button>
@@ -353,7 +353,7 @@ export default function LoginPage() {
                   <button
                     type="submit"
                     disabled={carregando}
-                    className="w-full cursor-pointer rounded-full bg-[var(--color-primary)] px-6 py-4 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="w-full cursor-pointer rounded-full bg-[var(--color-primary)] px-6 py-4 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 cn-button-primary"
                   >
                     {carregando
                       ? "Entrando..."
@@ -378,18 +378,18 @@ export default function LoginPage() {
           onClick={fecharRecuperacao}
         >
           <div
-            className="w-full max-w-md rounded-[2rem] bg-white p-7 shadow-xl"
+            className="w-full max-w-md rounded-[2rem] bg-white p-7 shadow-xl cn-card"
             onClick={(event) =>
               event.stopPropagation()
             }
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <span className="text-sm font-medium uppercase tracking-[0.2em] text-[var(--color-primary)]">
+                <span className="text-sm font-medium uppercase tracking-[0.2em] text-[var(--color-primary)] cn-brand-text">
                   Segurança
                 </span>
 
-                <h2 className="mt-2 text-2xl font-semibold">
+                <h2 className="mt-2 text-2xl font-normal">
                   Recuperar senha
                 </h2>
               </div>
@@ -434,7 +434,7 @@ export default function LoginPage() {
                   placeholder="seuemail@exemplo.com"
                   required
                   autoComplete="email"
-                  className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)]"
+                  className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--color-bg)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)] cn-input"
                 />
               </div>
 
@@ -456,7 +456,7 @@ export default function LoginPage() {
                   disabled={
                     enviandoRecuperacao
                   }
-                  className="w-full cursor-pointer rounded-full bg-[var(--color-primary)] px-6 py-3.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full cursor-pointer rounded-full bg-[var(--color-primary)] px-6 py-3.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 cn-button-primary"
                 >
                   {enviandoRecuperacao
                     ? "Enviando..."
@@ -468,7 +468,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={fecharRecuperacao}
-                  className="w-full cursor-pointer rounded-full border border-black/10 px-6 py-3.5 text-sm font-semibold transition hover:bg-black/5"
+                  className="w-full cursor-pointer rounded-full border border-black/10 px-6 py-3.5 text-sm font-semibold transition hover:bg-black/5 cn-button-secondary"
                 >
                   Voltar para o login
                 </button>

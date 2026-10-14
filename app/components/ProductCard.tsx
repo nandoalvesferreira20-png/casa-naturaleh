@@ -26,7 +26,7 @@ export default function ProductCard({
   });
 
   return (
-    <article className="overflow-hidden rounded-[1.5rem] border border-black/5 bg-white transition hover:-translate-y-1 hover:shadow-md">
+    <article className="overflow-hidden rounded-[1.5rem] border border-black/5 bg-white transition hover:-translate-y-1 hover:shadow-md cn-card">
       <div className="relative overflow-hidden flex h-64 items-center justify-center bg-[var(--color-bg-soft)]">
         <Image
           src={imagem}
@@ -43,11 +43,11 @@ export default function ProductCard({
       </div>
 
       <div className="p-5">
-        <span className="text-xs font-medium uppercase tracking-[0.18em] text-[var(--color-primary)]">
+        <span className="text-xs font-medium uppercase tracking-[0.18em] text-[var(--color-primary)] cn-brand-text">
           {categoria}
         </span>
 
-        <Heading className="mt-2 text-lg font-semibold">
+        <Heading className="cn-ui-title mt-2 text-lg font-semibold">
           {nome}
         </Heading>
 
@@ -58,7 +58,7 @@ export default function ProductCard({
 
           <a
             href={`/produto/${slug}`}
-            className="rounded-full bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
+            className="rounded-full bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 cn-button-primary"
           >
             Ver produto
           </a>
